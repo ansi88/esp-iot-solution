@@ -1,16 +1,9 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 #include <stdio.h>
 #include "driver/i2c.h"
 #include "esp_log.h"
@@ -171,7 +164,7 @@ esp_err_t is31fl3736_reset_reg(is31fl3736_handle_t fxled)
  * switch scan (SW-Y) 1 ~ 12; all == 8 * 12 == 96
  */
 esp_err_t is31fl3736_set_led_matrix(is31fl3736_handle_t fxled, uint16_t cs_x_bit, uint16_t sw_y_bit,
-                                        is31fl3736_led_stau_t status)
+                                    is31fl3736_led_stau_t status)
 {
     int i, j, k;
     uint8_t reg, reg_mask, reg_val, temp;
@@ -330,7 +323,7 @@ static esp_err_t is31fl3736_init(is31fl3736_handle_t fxled)
 uint8_t is31fl3736_get_i2c_addr(is31fl3736_addr_pin_t addr1_pin, is31fl3736_addr_pin_t addr2_pin)
 {
     uint8_t addr = IS31FL3736_I2C_ID | ((uint8_t) addr1_pin << 1) | ((uint8_t) addr2_pin << 3);
-    ESP_LOGI(TAG, "slave ADDR : %02x", (uint8_t )addr);
+    ESP_LOGI(TAG, "slave ADDR : %02x", (uint8_t)addr);
     return addr;
 }
 
@@ -372,4 +365,3 @@ esp_err_t is31fl3736_delete(is31fl3736_handle_t fxled)
     free(led);
     return ESP_OK;
 }
-

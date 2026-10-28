@@ -1,16 +1,9 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 #include <stdio.h>
 #include <string.h>
 #include "driver/i2c.h"
@@ -86,7 +79,7 @@ esp_err_t is31fl3218_channel_enable(is31fl3218_handle_t fxled, uint32_t ch_bit)
     for (int i = 0; i < 3; i++) {
         conl[i] = (ch_bit >> (i * 6)) & 0x3f;
     }
-    return is31fl3218_write(fxled, IS31FL3218_REG_CONL_1, (uint8_t *) (conl), 3);
+    return is31fl3218_write(fxled, IS31FL3218_REG_CONL_1, (uint8_t *)(conl), 3);
 }
 
 /**

@@ -6,7 +6,7 @@ We welcome contributions to the esp-iot-solution project!
 How to Contribute
 --------------------
 
-Contributions to esp-iot-solution - fixing bugs, adding features, adding documentation - are welcome. We accept contributions via `Github Pull Requests <https://help.github.com/articles/about-pull-requests>`_.
+Contributions to esp-iot-solution - fixing bugs, adding features, adding documentation - are welcome. We accept contributions via `GitHub Pull Requests <https://help.github.com/articles/about-pull-requests>`_.
 
 Before Contributing
 ----------------------
@@ -16,6 +16,8 @@ Before sending us a Pull Request, please consider this list of points:
 * Is the contribution entirely your own work, or already licensed under an Apache License 2.0 compatible Open Source License? If not then we unfortunately cannot accept it.
 
 * Does any new code conform to the esp-idf : :doc:`Style Guide <style-guide>` ?
+
+* Have you installed the `pre-commit hook <https://docs.espressif.com/projects/esp-idf/en/stable/esp32/contribute/install-pre-commit-hook.html>`_ for the esp-iot-solution project?
 
 * Does the code documentation follow requirements in `Documenting-code <http://docs.espressif.com/projects/esp-idf/en/stable/contribute/documenting-code.html>`_ ?
 

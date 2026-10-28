@@ -1,19 +1,11 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2022-2024 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #include <stdio.h>
-#include "driver/i2c.h"
+#include "freertos/FreeRTOS.h"
 #include "apds9960.h"
 
 #define APDS9960_TIMEOUT_MS_DEFAULT   (1000)
@@ -223,7 +215,7 @@ esp_err_t apds9960_enable_gesture_engine(apds9960_handle_t sensor, bool en)
 }
 
 esp_err_t apds9960_set_led_drive_boost(apds9960_handle_t sensor, apds9960_leddrive_t drive,
-        apds9960_ledboost_t boost)
+                                       apds9960_ledboost_t boost)
 {
     // set BOOST
     apds9960_dev_t *sens = (apds9960_dev_t *) sensor;
@@ -484,17 +476,17 @@ uint8_t apds9960_read_proximity(apds9960_handle_t sensor)
 }
 
 esp_err_t apds9960_set_proximity_interrupt_threshold(apds9960_handle_t sensor, uint8_t low, uint8_t high,
-        uint8_t persistance)
+                                                     uint8_t persistence)
 {
     apds9960_dev_t *sens = (apds9960_dev_t *) sensor;
     i2c_bus_write_byte(sens->i2c_dev, APDS9960_PILT, low);
     i2c_bus_write_byte(sens->i2c_dev, APDS9960_PIHT, high);
 
-    if (persistance > 7) {
-        persistance = 7;
+    if (persistence > 7) {
+        persistence = 7;
     }
 
-    sens->_pers_t.ppers = persistance;
+    sens->_pers_t.ppers = persistence;
     return i2c_bus_write_byte(sens->i2c_dev, APDS9960_PERS, (sens->_pers_t.ppers << 4) | sens->_pers_t.apers);
 }
 
@@ -585,7 +577,7 @@ esp_err_t apds9960_set_gesture_waittime(apds9960_handle_t sensor, apds9960_gwtim
         return ESP_FAIL;
     }
 
-    /* Set bits in register to given value */
+    /* Set bits in register to gien value */
     time &= 0x07;
     val &= 0xf8;
     val |= time;
@@ -615,7 +607,7 @@ esp_err_t apds9960_set_gesture_proximity_threshold(apds9960_handle_t sensor, uin
 }
 
 esp_err_t apds9960_set_gesture_offset(apds9960_handle_t sensor, uint8_t offset_up, uint8_t offset_down,
-        uint8_t offset_left, uint8_t offset_right)
+                                      uint8_t offset_left, uint8_t offset_right)
 {
     apds9960_dev_t *sens = (apds9960_dev_t *) sensor;
     i2c_bus_write_byte(sens->i2c_dev, APDS9960_GOFFSET_U, offset_up);

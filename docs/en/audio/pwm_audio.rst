@@ -2,7 +2,7 @@ PWM Audio
 ==============
 :link_to_translation:`zh_CN:[中文]`
 
-The PWM audio function uses the internal LEDC peripheral in ESP32 to generate PWM audio, which does not need an external audio Codec chip. This is mainly used for cost-sensitive applications with low audio quality requirements.
+The PWM audio function uses the internal LEDC peripheral in the ESP32 series chips to generate PWM audio, which does not need an external audio Codec chip. This is mainly used for cost-sensitive applications with low audio quality requirements.
 
 Features
 ----------------
@@ -55,18 +55,18 @@ Application Example
     pac.ringbuf_len        = 1024 * 8;
 
     pwm_audio_init(&pac));             /**< Initialize pwm audio */
-    pwm_audio_set_param(48000, 8, 2);  /**< Set sample rate, bits and channel numner */
+    pwm_audio_set_param(48000, 8, 2);  /**< Set sample rate, bits and channel number */
     pwm_audio_start();                 /**< Start to run */
 
     while(1) {
 
-        //< Perpare audio data, such as decode mp3/wav file
+        //< Prepare audio data, such as decode mp3/wav file
 
-        /**< Write data to paly */
+        /**< Write data to play */
         pwm_audio_write(audio_data, length, &written, 1000 / portTICK_PERIOD_MS);
     }
 
 API Reference
 -----------------
 
-.. include:: /_build/inc/pwm_audio.inc
+.. include-build-file:: inc/pwm_audio.inc

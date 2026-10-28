@@ -1,0 +1,7 @@
+# This file was generated using idf.py save-defconfig. It can be edited manually.
+# Espressif IoT Development Framework (ESP-IDF)  Project Minimal Configuration
+#
+CONFIG_FREERTOS_HZ=1000
+CONFIG_BOOTLOADER_LOG_LEVEL_WARN=y
+CONFIG_UAC_SPEAKER_CHANNEL_NUM=2
+CONFIG_UAC_MIC_CHANNEL_NUM=2

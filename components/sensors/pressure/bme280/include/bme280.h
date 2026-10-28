@@ -1,20 +1,12 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 #ifndef _BME280_H_
 #define _BME280_H_
 
-#include "driver/i2c.h"
 #include "i2c_bus.h"
 
 #define BME280_I2C_ADDRESS_DEFAULT   (0x76)     /*The device's I2C address is either 0x76 or 0x77.*/
@@ -209,7 +201,7 @@ extern "C"
  * @brief   Create bme280 handle_t
  *
  * @param  object handle of I2C
- * @param  decice address
+ * @param  device address
  *
  * @return
  *     - bme280_handle_t
@@ -281,7 +273,7 @@ bool bme280_is_reading_calibration(bme280_handle_t sensor);
 esp_err_t bme280_read_coefficients(bme280_handle_t sensor);
 
 /**
- * @brief  setup sensor with given parameters / settings
+ * @brief  setup sensor with gien parameters / settings
  *
  * @param  sensor object handle of bme280
  * @param  Sensor working mode
@@ -296,10 +288,10 @@ esp_err_t bme280_read_coefficients(bme280_handle_t sensor);
  *    - ESP_FAIL Fail
  */
 esp_err_t bme280_set_sampling(bme280_handle_t sensor, bme280_sensor_mode mode,
-                                  bme280_sensor_sampling tempsampling,
-                                  bme280_sensor_sampling presssampling,
-                                  bme280_sensor_sampling humsampling, bme280_sensor_filter filter,
-                                  bme280_standby_duration duration);
+                              bme280_sensor_sampling tempsampling,
+                              bme280_sensor_sampling presssampling,
+                              bme280_sensor_sampling humsampling, bme280_sensor_filter filter,
+                              bme280_standby_duration duration);
 
 /**
  * @brief init bme280 device
@@ -332,7 +324,7 @@ esp_err_t bme280_take_forced_measurement(bme280_handle_t sensor);
  *
  * @param sensor object handle of bme280
  * @param temperature pointer to temperature
- * @return esp_err_t 
+ * @return esp_err_t
  */
 esp_err_t bme280_read_temperature(bme280_handle_t sensor, float *temperature);
 
@@ -341,7 +333,7 @@ esp_err_t bme280_read_temperature(bme280_handle_t sensor, float *temperature);
  *
  * @param sensor object handle of bme280
  * @param pressure pointer to pressure value
- * @return esp_err_t 
+ * @return esp_err_t
  */
 esp_err_t bme280_read_pressure(bme280_handle_t sensor, float *pressure);
 
@@ -350,7 +342,7 @@ esp_err_t bme280_read_pressure(bme280_handle_t sensor, float *pressure);
  *
  * @param sensor object handle of bme280
  * @param humidity pointer to humidity value
- * @return esp_err_t 
+ * @return esp_err_t
  */
 esp_err_t bme280_read_humidity(bme280_handle_t sensor, float *humidity);
 
@@ -361,7 +353,7 @@ esp_err_t bme280_read_humidity(bme280_handle_t sensor, float *humidity);
  * @param sensor object handle of bme280
  * @param seaLevel: Sea-level pressure in hPa
  * @param altitude pointer to altitude value
- * @return esp_err_t 
+ * @return esp_err_t
  */
 esp_err_t bme280_read_altitude(bme280_handle_t sensor, float seaLevel, float *altitude);
 
@@ -373,7 +365,7 @@ esp_err_t bme280_read_altitude(bme280_handle_t sensor, float seaLevel, float *al
  * @param altitude      Altitude in meters
  * @param atmospheric   Atmospheric pressure in hPa
  * @param pressure pointer to pressure value
- * @return esp_err_t 
+ * @return esp_err_t
  */
 esp_err_t bme280_calculates_pressure(bme280_handle_t sensor, float altitude,
                                      float atmospheric, float *pressure);

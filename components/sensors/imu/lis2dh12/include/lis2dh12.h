@@ -1,16 +1,9 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2022-2024 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 #ifndef _LIS2DH12_H_
 #define _LIS2DH12_H_
 
@@ -104,7 +97,6 @@ typedef enum {
     LIS2DH12_ST_MODE1       = 0x02,    /*!< Self test 1  */
 } lis2dh12_self_test_t;
 
-
 /**
 * @brief  LIS2DH12 Init structure definition.
 */
@@ -145,7 +137,7 @@ typedef struct {
 * @brief  I2C address.
 */
 #define LIS2DH12_I2C_ADDRESS   0x19        /*If the SA0 pad is connected to ground, address is 0x18; if connected to vcc, address is 0x19*/
-#define LIS2DH12_I2C_MULTI_REG_ONCE   0x80 /*If read/write multipul register once*/
+#define LIS2DH12_I2C_MULTI_REG_ONCE   0x80 /*If read/write multiple register once*/
 
 /**
 * @brief  Temperature data status register
@@ -615,10 +607,10 @@ esp_err_t lis2dh12_delete(lis2dh12_handle_t *sensor);
 esp_err_t lis2dh12_get_deviceid(lis2dh12_handle_t sensor, uint8_t *deviceid);
 
 /**
- * @brief Set configration of LIS2DH12
+ * @brief Set configuration of LIS2DH12
  *
  * @param sensor object handle of LIS2DH12
- * @param lis2dh12_config a structure pointer of configration
+ * @param lis2dh12_config a structure pointer of configuration
  *
  * @return
  *     - ESP_OK Success
@@ -627,10 +619,10 @@ esp_err_t lis2dh12_get_deviceid(lis2dh12_handle_t sensor, uint8_t *deviceid);
 esp_err_t lis2dh12_set_config(lis2dh12_handle_t sensor, lis2dh12_config_t *lis2dh12_config);
 
 /**
- * @brief Get configration of LIS2DH12
+ * @brief Get configuration of LIS2DH12
  *
  * @param sensor object handle of LIS2DH12
- * @param lis2dh12_config a structure pointer of configration
+ * @param lis2dh12_config a structure pointer of configuration
  *
  * @return
  *     - ESP_OK Success
@@ -796,48 +788,6 @@ esp_err_t lis2dh12_get_raw_acce(lis2dh12_handle_t sensor, lis2dh12_raw_acce_valu
  * @return esp_err_t
  */
 esp_err_t lis2dh12_get_acce(lis2dh12_handle_t sensor, lis2dh12_acce_value_t *acce_value);
-
-/***implements of imu hal interface****/
-#ifdef CONFIG_SENSOR_IMU_INCLUDED_LIS2DH12
-
-/**
- * @brief initialize lis2dh12 with default configurations
- * 
- * @param i2c_bus i2c bus handle the sensor will attached to
- * @return
- *     - ESP_OK Success
- *     - ESP_FAIL Fail
- */
-esp_err_t imu_lis2dh12_init(i2c_bus_handle_t i2c_bus);
-
-/**
- * @brief 
- * 
- * @return esp_err_t 
- */
-esp_err_t imu_lis2dh12_deinit(void);
-
-/**
- * @brief de-initialize lis2dh12
- * 
- * @return
- *     - ESP_OK Success
- *     - ESP_FAIL Fail
- */
-esp_err_t imu_lis2dh12_test(void);
-
-/**
- * @brief acquire lis2dh12 accelerometer result one time.
- * 
- * @param acce_x result data (unit:g)
- * @param acce_y result data (unit:g)
- * @param acce_z result data (unit:g)
- * @return
- *     - ESP_OK Success
- *     - ESP_FAIL Fail
- */
-esp_err_t imu_lis2dh12_acquire_acce(float *acce_x, float *acce_y, float *acce_z);
-#endif
 
 #ifdef __cplusplus
 }

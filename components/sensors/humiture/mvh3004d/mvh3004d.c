@@ -1,19 +1,13 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2022-2026 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 #include <stdio.h>
 #include "esp_log.h"
 #include "mvh3004d.h"
+#include "iot_sensor_hub.h"
 
 static const char *TAG = "mvh3004d";
 typedef struct {
@@ -76,3 +70,93 @@ esp_err_t mvh3004d_get_temperature(mvh3004d_handle_t sensor, float *tp)
 {
     return mvh3004d_get_data(sensor, tp, NULL);
 }
+
+#ifdef CONFIG_SENSOR_INCLUDED_HUMITURE
+
+esp_err_t humiture_mvh3004d_init(void **sensor_ctx, i2c_bus_handle_t i2c_bus, uint8_t addr)
+{
+    if (!sensor_ctx || !i2c_bus) {
+        return ESP_FAIL;
+    }
+
+    mvh3004d_handle_t mvh3004d = mvh3004d_create(i2c_bus, addr);
+
+    if (!mvh3004d) {
+        return ESP_FAIL;
+    }
+
+    *sensor_ctx = mvh3004d;
+    return ESP_OK;
+}
+
+esp_err_t humiture_mvh3004d_deinit(void *sensor_ctx)
+{
+    mvh3004d_handle_t mvh3004d = (mvh3004d_handle_t)sensor_ctx;
+
+    if (!mvh3004d) {
+        return ESP_FAIL;
+    }
+
+    return mvh3004d_delete(&mvh3004d);
+}
+
+esp_err_t humiture_mvh3004d_test(void *sensor_ctx)
+{
+    if (!sensor_ctx) {
+        return ESP_FAIL;
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t humiture_mvh3004d_acquire_humidity(void *sensor_ctx, float *h)
+{
+    mvh3004d_handle_t mvh3004d = (mvh3004d_handle_t)sensor_ctx;
+
+    if (!mvh3004d) {
+        return ESP_FAIL;
+    }
+
+    float humidity = 0;
+    esp_err_t ret = mvh3004d_get_huminity(mvh3004d, &humidity);
+
+    if (ret == ESP_OK) {
+        *h = humidity;
+        return ESP_OK;
+    }
+
+    *h = 0;
+    return ESP_FAIL;
+}
+
+esp_err_t humiture_mvh3004d_acquire_temperature(void *sensor_ctx, float *t)
+{
+    mvh3004d_handle_t mvh3004d = (mvh3004d_handle_t)sensor_ctx;
+
+    if (!mvh3004d) {
+        return ESP_FAIL;
+    }
+
+    float temperature = 0;
+    esp_err_t ret = mvh3004d_get_temperature(mvh3004d, &temperature);
+
+    if (ret == ESP_OK) {
+        *t = temperature;
+        return ESP_OK;
+    }
+
+    *t = 0;
+    return ESP_FAIL;
+}
+
+static humiture_impl_t mvh3004d_impl = {
+    .init = humiture_mvh3004d_init,
+    .deinit = humiture_mvh3004d_deinit,
+    .test = humiture_mvh3004d_test,
+    .acquire_humidity = humiture_mvh3004d_acquire_humidity,
+    .acquire_temperature = humiture_mvh3004d_acquire_temperature,
+};
+
+SENSOR_HUB_DETECT_FN(HUMITURE_ID, mvh3004d, &mvh3004d_impl);
+
+#endif

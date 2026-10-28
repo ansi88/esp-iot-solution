@@ -1,79 +1,57 @@
-// Copyright 2020 Espressif Systems (Shanghai) Co. Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-#ifndef _IOT_BUTTON_ADC_H_
-#define _IOT_BUTTON_ADC_H_
+/* SPDX-FileCopyrightText: 2022-2025 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#pragma once
 
 #include "driver/gpio.h"
-#include "driver/adc.h"
+#include "esp_adc/adc_oneshot.h"
+#include "button_types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define ADC_BUTTON_COMBINE(channel, index) ((channel)<<8 | (index))
-#define ADC_BUTTON_SPLIT_INDEX(data) ((uint32_t)(data)&0xff)
-#define ADC_BUTTON_SPLIT_CHANNEL(data) (((uint32_t)(data) >> 8) & 0xff)
-
 /**
  * @brief adc button configuration
- * 
+ *
  */
 typedef struct {
-    adc1_channel_t adc_channel;  /**< Channel of ADC */
-    uint8_t button_index;        /**< button index on the channel */
-    uint16_t min;                /**< min voltage in mv corresponding to the button */
-    uint16_t max;                /**< max voltage in mv corresponding to the button */
+    adc_oneshot_unit_handle_t *adc_handle;           /**< handle of adc unit, if NULL will create new one internal, else will use the handle */
+    adc_unit_t unit_id;                              /**< ADC unit */
+    uint8_t adc_channel;                             /**< Channel of ADC */
+    uint8_t button_index;                            /**< button index on the channel */
+    uint16_t min;                                    /**< min voltage in mv corresponding to the button */
+    uint16_t max;                                    /**< max voltage in mv corresponding to the button */
 } button_adc_config_t;
 
 /**
- * @brief Initialize gpio button
- * 
- * @param config pointer of configuration struct
- * 
+ * @brief Create a new ADC button device
+ *
+ * This function initializes and configures a new ADC button device using the given configuration parameters.
+ * It manages the ADC unit, channels, and button-specific parameters, and ensures proper resource allocation
+ * for the ADC button object.
+ *
+ * @param[in] button_config Configuration for the button device, including callbacks and debounce parameters.
+ * @param[in] adc_config Configuration for the ADC channel and button, including the ADC unit, channel,
+ *                        button index, and voltage range (min and max).
+ * @param[out] ret_button Handle to the newly created button device.
+ *
  * @return
- *      - ESP_OK on success
- *      - ESP_ERR_INVALID_ARG   Arguments is NULL.
- *      - ESP_ERR_NOT_SUPPORTED Arguments out of range.
- *      - ESP_ERR_INVALID_STATE State is error.
+ *     - ESP_OK: Successfully created the ADC button device.
+ *     - ESP_ERR_INVALID_ARG: Invalid argument provided.
+ *     - ESP_ERR_NO_MEM: Memory allocation failed.
+ *     - ESP_ERR_INVALID_STATE: The requested button index or channel is already in use, or no channels are available.
+ *     - ESP_FAIL: Failed to initialize or configure the ADC or button device.
+ *
+ * @note
+ * - If the ADC unit is not already configured, it will be initialized with the provided or default settings.
+ * - If the ADC channel is not initialized, it will be configured for the specified unit and calibrated.
+ * - This function ensures that ADC resources are reused whenever possible to optimize resource allocation.
  */
-esp_err_t button_adc_init(const button_adc_config_t *config);
-
-/**
- * @brief Deinitialize gpio button
- * 
- * @param channel ADC channel
- * @param button_index Button index on the channel
- * 
- * @return
- *      - ESP_OK on success
- *      - ESP_ERR_INVALID_ARG   Arguments is invalid.
- */
-esp_err_t button_adc_deinit(adc1_channel_t channel, int button_index);
-
-/**
- * @brief Get the adc button level
- * 
- * @param button_index It is compressed by ADC channel and button index, use the macro ADC_BUTTON_COMBINE to generate. It will be treated as a uint32_t variable.
- * 
- * @return 
- *      - 0 Not pressed
- *      - 1 Pressed
- */
-uint8_t button_adc_get_key_level(void *button_index);
+esp_err_t iot_button_new_adc_device(const button_config_t *button_config, const button_adc_config_t *adc_config, button_handle_t *ret_button);
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

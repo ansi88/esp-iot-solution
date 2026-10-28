@@ -1,38 +1,20 @@
-// Copyright 2020-2021 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2022-2026 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #include <stdio.h>
+#include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "hal/humiture_hal.h"
+#include "iot_sensor_hub.h"
 
-#ifdef CONFIG_SENSOR_HUMITURE_INCLUDED_SHT3X
-#include "sht3x.h"
-#endif
-#ifdef CONFIG_SENSOR_HUMITURE_INCLUDED_HTS221
-#include "hts221.h"
-#endif
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-static esp_err_t null_function(void){return ESP_ERR_NOT_SUPPORTED;}
-static esp_err_t null_acquire_humidity_function(float *h){return ESP_ERR_NOT_SUPPORTED;}
-static esp_err_t null_acquire_temperature_function(float *t){return ESP_ERR_NOT_SUPPORTED;}
-#pragma GCC diagnostic pop
+#ifdef  CONFIG_SENSOR_INCLUDED_HUMITURE
 
 static const char *TAG = "HUMITURE|TEMPERATURE";
 
@@ -42,92 +24,46 @@ static const char *TAG = "HUMITURE|TEMPERATURE";
     }
 
 typedef struct {
-    humiture_id_t id;
-    esp_err_t (*init)(bus_handle_t);
-    esp_err_t (*deinit)(void);
-    esp_err_t (*test)(void);
-    esp_err_t (*acquire_humidity)(float *);
-    esp_err_t (*acquire_temperature)(float *);
-    esp_err_t (*sleep)(void);
-    esp_err_t (*wakeup)(void);
-} humiture_impl_t;
-
-typedef struct {
-    humiture_id_t id;
     bus_handle_t bus;
     bool is_init;
+    void *driver_ctx;
     const humiture_impl_t *impl;
 } sensor_humiture_t;
 
-static const humiture_impl_t humiture_implementations[] = {
-#ifdef CONFIG_SENSOR_HUMITURE_INCLUDED_SHT3X
-    {
-        .id = SHT3X_ID,
-        .init = humiture_sht3x_init,
-        .deinit = humiture_sht3x_deinit,
-        .test = humiture_sht3x_test,
-        .acquire_humidity = humiture_sht3x_acquire_humidity,
-        .acquire_temperature = humiture_sht3x_acquire_temperature,
-        .sleep = null_function,
-        .wakeup = null_function,
-    },
-#endif
-#ifdef CONFIG_SENSOR_HUMITURE_INCLUDED_HTS221
-    {
-        .id = HTS221_ID,
-        .init = humiture_hts221_init,
-        .deinit = humiture_hts221_deinit,
-        .test = humiture_hts221_test,
-        .acquire_humidity = humiture_hts221_acquire_humidity,
-        .acquire_temperature = humiture_hts221_acquire_temperature,
-        .sleep = humiture_hts221_sleep,
-        .wakeup = humiture_hts221_wakeup,
-    },
-#endif
-};
-
-/****************************private functions*************************************/
-
-static const humiture_impl_t *find_implementation(int id)
-{
-    const humiture_impl_t *active_driver = NULL;
-    int count = sizeof(humiture_implementations) / sizeof(humiture_impl_t);
-
-    for (int i = 0; i < count; i++) {
-        if (humiture_implementations[i].id == id) {
-            active_driver = &humiture_implementations[i];
-            break;
-        }
-    }
-
-    return active_driver;
-}
-
 /****************************public functions*************************************/
 
-sensor_humiture_handle_t humiture_create(bus_handle_t bus, int id)
+sensor_humiture_handle_t humiture_create(bus_handle_t bus, const char *sensor_name, uint8_t addr)
 {
     SENSOR_CHECK(bus != NULL, "i2c bus has not initialized", NULL);
-    const humiture_impl_t *sensor_impl = find_implementation(id);
+    if (sensor_name == NULL || addr == 0) {
+        ESP_LOGE(TAG, "Incorrect Sensor Information");
+        return NULL;
+    }
 
-    if (sensor_impl == NULL) {
-        ESP_LOGE(TAG, "no driver founded, HUMITURE ID = %d", id);
+    // resolve the driver impl by name (runtime registry first, then link-time)
+    sensor_type_t driver_type = NULL_ID;
+    void *driver_impl = iot_sensor_find_driver(sensor_name, &driver_type);
+    if (driver_impl == NULL) {
+        ESP_LOGE(TAG, "no humiture driver named '%s' found", sensor_name);
+        return NULL;
+    }
+    if (driver_type != HUMITURE_ID) {
+        ESP_LOGE(TAG, "driver '%s' is a %s driver, not humiture", sensor_name, SENSOR_TYPE_STRING[driver_type]);
         return NULL;
     }
 
     sensor_humiture_t *p_sensor = (sensor_humiture_t *)malloc(sizeof(sensor_humiture_t));
     SENSOR_CHECK(p_sensor != NULL, "humiture sensor creat failed", NULL);
-    p_sensor->id = id;
     p_sensor->bus = bus;
-    p_sensor->impl = sensor_impl;
-    esp_err_t ret = p_sensor->impl->init(bus);
+    p_sensor->impl = (humiture_impl_t *)driver_impl;
+    p_sensor->driver_ctx = NULL;
 
+    esp_err_t ret = p_sensor->impl->init(&p_sensor->driver_ctx, bus, addr);
     if (ret != ESP_OK) {
         free(p_sensor);
         ESP_LOGE(TAG, "humiture sensor init failed");
         return NULL;
     }
-
     p_sensor->is_init = true;
     return (sensor_humiture_handle_t)p_sensor;
 }
@@ -139,12 +75,13 @@ esp_err_t humiture_delete(sensor_humiture_handle_t *sensor)
 
     if (!p_sensor->is_init) {
         free(p_sensor);
+        *sensor = NULL;
         return ESP_OK;
     }
 
-    p_sensor->is_init = false;
-    esp_err_t ret = p_sensor->impl->deinit();
+    esp_err_t ret = p_sensor->impl->deinit(p_sensor->driver_ctx);
     SENSOR_CHECK(ret == ESP_OK, "humiture sensor de-init failed", ESP_FAIL);
+    p_sensor->is_init = false;
     free(p_sensor);
     *sensor = NULL;
     return ESP_OK;
@@ -159,7 +96,11 @@ esp_err_t humiture_test(sensor_humiture_handle_t sensor)
         return ESP_FAIL;
     }
 
-    esp_err_t ret = p_sensor->impl->test();
+    if (p_sensor->impl->test == NULL) {
+        return ESP_ERR_NOT_SUPPORTED;
+    }
+
+    esp_err_t ret = p_sensor->impl->test(p_sensor->driver_ctx);
     return ret;
 }
 
@@ -167,7 +108,7 @@ esp_err_t humiture_acquire_humidity(sensor_humiture_handle_t sensor, float *humi
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
     sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
-    esp_err_t ret = p_sensor->impl->acquire_humidity(humidity);
+    esp_err_t ret = p_sensor->impl->acquire_humidity(p_sensor->driver_ctx, humidity);
     return ret;
 }
 
@@ -175,7 +116,7 @@ esp_err_t humiture_acquire_temperature(sensor_humiture_handle_t sensor, float *t
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
     sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
-    esp_err_t ret = p_sensor->impl->acquire_temperature(temperature);
+    esp_err_t ret = p_sensor->impl->acquire_temperature(p_sensor->driver_ctx, temperature);
     return ret;
 }
 
@@ -183,7 +124,10 @@ esp_err_t humiture_sleep(sensor_humiture_handle_t sensor)
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
     sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
-    esp_err_t ret = p_sensor->impl->sleep();
+    if (p_sensor->impl->sleep == NULL) {
+        return ESP_ERR_NOT_SUPPORTED;
+    }
+    esp_err_t ret = p_sensor->impl->sleep(p_sensor->driver_ctx);
     return ret;
 }
 
@@ -191,7 +135,10 @@ esp_err_t humiture_wakeup(sensor_humiture_handle_t sensor)
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
     sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
-    esp_err_t ret = p_sensor->impl->wakeup();
+    if (p_sensor->impl->wakeup == NULL) {
+        return ESP_ERR_NOT_SUPPORTED;
+    }
+    esp_err_t ret = p_sensor->impl->wakeup(p_sensor->driver_ctx);
     return ret;
 }
 
@@ -200,13 +147,18 @@ static esp_err_t humiture_set_power(sensor_humiture_handle_t sensor, sensor_powe
     SENSOR_CHECK(sensor != NULL, "pointer can't be NULL ", ESP_ERR_INVALID_ARG);
     sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
     esp_err_t ret;
-    switch (power_mode)
-    {
+    switch (power_mode) {
     case POWER_MODE_WAKEUP:
-        ret = p_sensor->impl->wakeup();
+        if (p_sensor->impl->wakeup == NULL) {
+            return ESP_ERR_NOT_SUPPORTED;
+        }
+        ret = p_sensor->impl->wakeup(p_sensor->driver_ctx);
         break;
     case POWER_MODE_SLEEP:
-        ret = p_sensor->impl->sleep();
+        if (p_sensor->impl->sleep == NULL) {
+            return ESP_ERR_NOT_SUPPORTED;
+        }
+        ret = p_sensor->impl->sleep(p_sensor->driver_ctx);
         break;
     default:
         ret = ESP_ERR_NOT_SUPPORTED;
@@ -221,31 +173,58 @@ esp_err_t humiture_acquire(sensor_humiture_handle_t sensor, sensor_data_group_t 
     sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
     esp_err_t ret;
     int i = 0;
-    ret = p_sensor->impl->acquire_temperature(&data_group->sensor_data[i].temperature);
+    ret = p_sensor->impl->acquire_temperature(p_sensor->driver_ctx, &data_group->sensor_data[i].temperature);
     if (ESP_OK == ret) {
         data_group->sensor_data[i].event_id = SENSOR_TEMP_DATA_READY;
         i++;
+    } else if (ret != ESP_ERR_NOT_SUPPORTED) {
+        data_group->number = i;
+        return ret;
     }
-    ret = p_sensor->impl->acquire_humidity(&data_group->sensor_data[i].humidity);
+    ret = p_sensor->impl->acquire_humidity(p_sensor->driver_ctx, &data_group->sensor_data[i].humidity);
     if (ESP_OK == ret) {
         data_group->sensor_data[i].event_id = SENSOR_HUMI_DATA_READY;
         i++;
+    } else if (ret != ESP_ERR_NOT_SUPPORTED) {
+        data_group->number = i;
+        return ret;
     }
     data_group->number = i;
     return ESP_OK;
+}
+
+esp_err_t humiture_set_work_mode(sensor_humiture_handle_t sensor, sensor_mode_t work_mode)
+{
+    SENSOR_CHECK(sensor != NULL, "pointer can't be NULL ", ESP_ERR_INVALID_ARG);
+    sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
+
+    if (p_sensor->impl->set_mode == NULL) {
+        return ESP_ERR_NOT_SUPPORTED;
+    }
+    return p_sensor->impl->set_mode(p_sensor->driver_ctx, work_mode);
+}
+
+esp_err_t humiture_set_range(sensor_humiture_handle_t sensor, sensor_range_t range)
+{
+    SENSOR_CHECK(sensor != NULL, "pointer can't be NULL ", ESP_ERR_INVALID_ARG);
+    sensor_humiture_t *p_sensor = (sensor_humiture_t *)(sensor);
+
+    if (p_sensor->impl->set_range == NULL) {
+        return ESP_ERR_NOT_SUPPORTED;
+    }
+    return p_sensor->impl->set_range(p_sensor->driver_ctx, range);
 }
 
 esp_err_t humiture_control(sensor_humiture_handle_t sensor, sensor_command_t cmd, void *args)
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
     esp_err_t ret;
-    switch (cmd)
-    {
+    switch (cmd) {
     case COMMAND_SET_MODE:
-        ret = ESP_ERR_NOT_SUPPORTED;
+        ret = humiture_set_work_mode(sensor, (sensor_mode_t)args);
         break;
     case COMMAND_SET_RANGE:
-        ret = ESP_ERR_NOT_SUPPORTED;
+        ret = humiture_set_range(sensor, (sensor_range_t)args);
         break;
     case COMMAND_SET_ODR:
         ret = ESP_ERR_NOT_SUPPORTED;
@@ -262,3 +241,4 @@ esp_err_t humiture_control(sensor_humiture_handle_t sensor, sensor_command_t cmd
     }
     return ret;
 }
+#endif

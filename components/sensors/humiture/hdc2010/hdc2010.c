@@ -1,21 +1,14 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2022-2026 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 #include <stdio.h>
-#include "driver/i2c.h"
 #include "i2c_bus.h"
 #include "esp_log.h"
 #include "hdc2010.h"
+#include "iot_sensor_hub.h"
 
 #define WRITE_BIT                       I2C_MASTER_WRITE  /*!< I2C master write */
 #define READ_BIT                        I2C_MASTER_READ   /*!< I2C master read */
@@ -214,7 +207,7 @@ esp_err_t hdc2010_set_reset_and_drdy(hdc2010_handle_t sensor, hdc2010_reset_and_
 {
     hdc2010_dev_t *sens = (hdc2010_dev_t *) sensor;
     uint8_t config_data = 0;
-    config_data |= config->heat_en << 7;
+    config_data |= config->soft_res << 7;
     config_data |= config->output_rate << 4;
     config_data |= config->heat_en << 3;
     config_data |= config->int_en << 2;
@@ -297,3 +290,77 @@ esp_err_t hdc2010_default_init(hdc2010_handle_t sensor)
 
     return ESP_OK;
 }
+
+#ifdef CONFIG_SENSOR_INCLUDED_HUMITURE
+
+esp_err_t humiture_hdc2010_init(void **sensor_ctx, i2c_bus_handle_t i2c_bus, uint8_t addr)
+{
+    if (!sensor_ctx || !i2c_bus) {
+        return ESP_FAIL;
+    }
+
+    hdc2010_handle_t hdc2010 = hdc2010_create(i2c_bus, addr);
+
+    if (!hdc2010) {
+        return ESP_FAIL;
+    }
+
+    *sensor_ctx = hdc2010;
+    return ESP_OK;
+}
+
+esp_err_t humiture_hdc2010_deinit(void *sensor_ctx)
+{
+    hdc2010_handle_t hdc2010 = (hdc2010_handle_t)sensor_ctx;
+
+    if (!hdc2010) {
+        return ESP_FAIL;
+    }
+
+    return hdc2010_delete(&hdc2010);
+}
+
+esp_err_t humiture_hdc2010_test(void *sensor_ctx)
+{
+    if (!sensor_ctx) {
+        return ESP_FAIL;
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t humiture_hdc2010_acquire_humidity(void *sensor_ctx, float *h)
+{
+    hdc2010_handle_t hdc2010 = (hdc2010_handle_t)sensor_ctx;
+
+    if (!hdc2010) {
+        return ESP_FAIL;
+    }
+
+    *h = hdc2010_get_humidity(hdc2010);
+    return ESP_OK;
+}
+
+esp_err_t humiture_hdc2010_acquire_temperature(void *sensor_ctx, float *t)
+{
+    hdc2010_handle_t hdc2010 = (hdc2010_handle_t)sensor_ctx;
+
+    if (!hdc2010) {
+        return ESP_FAIL;
+    }
+
+    *t = hdc2010_get_temperature(hdc2010);
+    return ESP_OK;
+}
+
+static humiture_impl_t hdc2010_impl = {
+    .init = humiture_hdc2010_init,
+    .deinit = humiture_hdc2010_deinit,
+    .test = humiture_hdc2010_test,
+    .acquire_humidity = humiture_hdc2010_acquire_humidity,
+    .acquire_temperature = humiture_hdc2010_acquire_temperature,
+};
+
+SENSOR_HUB_DETECT_FN(HUMITURE_ID, hdc2010, &hdc2010_impl);
+
+#endif

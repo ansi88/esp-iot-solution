@@ -1,32 +1,18 @@
-// Copyright 2020-2021 Espressif Systems (Shanghai) Co. Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2022-2026 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef _MCP23017_H_
 #define _MCP23017_H_
 
-#include "i2c_bus.h"
+#include <stdbool.h>
+#include "esp_io_expander_mcp23017.h"
 
-#define MCP23017_I2C_ADDRESS_DEFAULT   (0x20)           /*!< 0100A2A1A0+R/W */
+#define MCP23017_I2C_ADDRESS_DEFAULT   ESP_IO_EXPANDER_I2C_MCP23017_ADDRESS_000 /*!< 0100A2A1A0+R/W */
 
-#define WRITE_BIT                       I2C_MASTER_WRITE/*!< I2C master write */
-#define READ_BIT                        I2C_MASTER_READ /*!< I2C master read */
-#define ACK_CHECK_EN                    0x1             /*!< I2C master will check ack from slave*/
-#define ACK_CHECK_DIS                   0x0             /*!< I2C master will not check ack from slave */
-#define ACK_VAL                         0x0             /*!< I2C ack value */
-#define NACK_VAL                        0x1             /*!< I2C nack value */
-
-typedef void* mcp23017_handle_t;                        /*!< handle of mcp23017 */
+typedef esp_io_expander_handle_t mcp23017_handle_t;              /*!< handle of mcp23017 */
 
 typedef enum {
     MCP23017_GPIOA = 0x00, /*!< GPIO Port A */
@@ -62,13 +48,13 @@ extern "C"
 /**
  * @brief Create a MCP23017 device
  *
- * @param bus device handle of i2c_bus
+ * @param bus device handle of i2c master bus
  * @param dev_addr device address
  *
  * @return
  *     - mcp23017_handle_t return mcp23017 device handle, NULL is failed.
  */
-mcp23017_handle_t mcp23017_create(i2c_bus_handle_t bus, uint8_t dev_addr);
+mcp23017_handle_t mcp23017_create(i2c_master_bus_handle_t bus, uint8_t dev_addr);
 
 /**
  * @brief Delete the MCP23017 device
@@ -98,7 +84,7 @@ esp_err_t mcp23017_delete(mcp23017_handle_t *p_dev);
  *     - ESP_ERR_INVALID_ARG Parameter error
  */
 esp_err_t mcp23017_interrupt_en(mcp23017_handle_t dev, uint16_t pins,
-        bool intr_mode, uint16_t defaultValue);
+                                bool intr_mode, uint16_t defaultValue);
 
 /**
  * @brief delete MCP23017 interrupt pin,
@@ -126,7 +112,7 @@ esp_err_t mcp23017_interrupt_disable(mcp23017_handle_t dev, uint16_t pins);
  *     - ESP_ERR_INVALID_ARG Parameter error
  */
 esp_err_t mcp23017_set_interrupt_polarity(mcp23017_handle_t dev,
-        mcp23017_gpio_port_t gpio, uint8_t chLevel);
+                                          mcp23017_gpio_port_t gpio, uint8_t chLevel);
 
 /**
  * @brief Sequential operation mode set
@@ -162,7 +148,7 @@ esp_err_t mcp23017_set_pullup(mcp23017_handle_t dev, uint16_t pins);
  *
  * @param dev device handle of MCP23017
  *
- * @return 
+ * @return
  *     - uint16_t value of interrupt pin
  */
 uint16_t mcp23017_get_int_pin(mcp23017_handle_t dev);
@@ -202,7 +188,7 @@ esp_err_t mcp23017_check_present(mcp23017_handle_t dev);
  *     - ESP_ERR_INVALID_ARG Parameter error
  */
 esp_err_t mcp23017_mirror_interrupt(mcp23017_handle_t dev, uint8_t mirror,
-        mcp23017_gpio_port_t gpio);
+                                    mcp23017_gpio_port_t gpio);
 
 /**
  * @brief write output value of GPIOA,(work in output)
@@ -217,7 +203,7 @@ esp_err_t mcp23017_mirror_interrupt(mcp23017_handle_t dev, uint8_t mirror,
  *     - ESP_ERR_INVALID_ARG Parameter error
  */
 esp_err_t mcp23017_write_io(mcp23017_handle_t dev, uint8_t value,
-        mcp23017_gpio_port_t gpio);
+                            mcp23017_gpio_port_t gpio);
 
 /**
  * @brief read value of REG_GPIOA/REG_GPIOB;Reflects the logic level on pin <7: 0>
@@ -243,11 +229,10 @@ uint8_t mcp23017_read_io(mcp23017_handle_t dev, mcp23017_gpio_port_t gpio);
  *     - ESP_ERR_INVALID_ARG Parameter error
  */
 esp_err_t mcp23017_set_io_dir(mcp23017_handle_t dev, uint8_t value,
-        mcp23017_gpio_port_t gpio);
+                              mcp23017_gpio_port_t gpio);
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif

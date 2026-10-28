@@ -1,4 +1,3 @@
-
 Display
 *************************
 
@@ -7,7 +6,7 @@ Display
 .. toctree::
     :maxdepth: 1
 
-    Screen <screen>
-    Digit Tube <digit_tube>
+    LCD Screen <lcd/index>
+    Digital Tube <digital_tube>
     LED lndicator <led_indicator>
-
+    LCD Tools <tools/index>

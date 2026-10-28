@@ -1,0 +1,96 @@
+.pre_check_template:
+  stage: pre_check
+  image: python:3.12
+  dependencies: []
+
+check_example_paths:
+  extends:
+    - .pre_check_template
+    - .rules:pre_check:components
+  tags: ["shiny"]
+  script:
+    - pip install --upgrade pip
+    - pip install pyyaml
+    - python ${CI_PROJECT_DIR}/tools/ci/check_components.py
+
+check_elf_loader_host:
+  extends:
+    - .pre_check_template
+    - .rules:pre_check:elf_loader_host
+  image: espressif/idf:release-v5.4
+  tags: ["build"]
+  script:
+    - CC=cc python3 -m unittest discover -s components/elf_loader/tests/host -p test_elf_validate.py -v
+
+# Exercise the actual ELF32 parser with instrumented code and reproducible
+# mutations independently of firmware builds or connected hardware.
+check_elf_loader_ubsan:
+  extends:
+    - .pre_check_template
+    - .rules:pre_check:elf_loader_host
+  image: espressif/idf:release-v5.4
+  tags: ["build"]
+  script:
+    - |
+      set -eu
+      work=$(mktemp -d)
+      trap 'rm -rf "$work"' EXIT
+      for arch in xtensa riscv; do
+        case "$arch" in
+          xtensa)
+            flags="-DCONFIG_IDF_TARGET_ARCH_XTENSA=1 -DCONFIG_ELF_LOADER_BUS_ADDRESS_MIRROR=1 -DCONFIG_ELF_DYNAMIC_LOAD_SHARED_OBJECT=1"
+            ;;
+          riscv)
+            flags="-DCONFIG_IDF_TARGET_ARCH_RISCV=1"
+            ;;
+        esac
+        cc -std=c11 -D_GNU_SOURCE -O1 -fsanitize=undefined -fno-omit-frame-pointer \
+          $flags -I components/elf_loader/tests/host/include \
+          -I components/elf_loader/include \
+          components/elf_loader/tests/host/fuzz_elf_validate.c \
+          components/elf_loader/src/esp_elf_validate.c \
+          -o "$work/validate_$arch"
+        UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 \
+          "$work/validate_$arch" "examples/elf_loader/elf_loader_example/main/test_$arch.elf"
+      done
+
+check_pre_commit:
+  extends:
+    - .pre_check_template
+  before_script:
+    - pip install pre-commit
+  rules:
+    # Pipelines triggered via the API or web might not have a base commit SHA, so failures are allowed.
+    - if: '$CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web"'
+      allow_failure: true
+    - when: always
+      allow_failure: false
+  tags: ["pre-commit"]
+  script:
+    - |
+      # merged results pipelines, by default
+      if [[ -n $CI_MERGE_REQUEST_SOURCE_BRANCH_SHA ]]; then
+        MODIFIED_FILES=$(git diff --name-only $CI_MERGE_REQUEST_DIFF_BASE_SHA $CI_MERGE_REQUEST_SOURCE_BRANCH_SHA)
+      # merge request pipelines, when the mr got conflicts
+      elif [[ -n $CI_MERGE_REQUEST_DIFF_BASE_SHA ]]; then
+        MODIFIED_FILES=$(git diff --name-only $CI_MERGE_REQUEST_DIFF_BASE_SHA $CI_COMMIT_SHA)
+      # other pipelines, like the protected branches pipelines
+      else
+        MODIFIED_FILES=$(git diff --name-only $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA)
+      fi
+      # print the MODIFIED_FILES
+      echo "MODIFIED_FILES: $MODIFIED_FILES"
+    - pre-commit install --allow-missing-config -t pre-commit -t commit-msg
+    - pre-commit run --files $MODIFIED_FILES
+    # Host-only Board Manager/CI configuration and relinker regression tests.
+    - python -m unittest discover -s tools/tests -p 'test_*.py'
+    - python -m unittest discover -s tools/cmake_utilities/tests -p 'test_relinker_compilation.py'
+
+check_readme_links:
+  extends:
+    - .pre_check_template
+    - .rules:pre_check:readme
+  tags: ["build", "internet"]
+  allow_failure: true
+  script:
+    - python ${CI_PROJECT_DIR}/tools/ci/check_readme_links.py

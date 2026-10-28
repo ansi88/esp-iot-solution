@@ -1,20 +1,14 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2022-2026 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 #include "veml6040.h"
+#include "iot_sensor_hub.h"
 
 //CMD
 #define VEML6040_SET_CMD      0x00
@@ -142,27 +136,27 @@ float veml6040_get_lux(veml6040_handle_t sensor)
     veml6040_dev_t *dev = (veml6040_dev_t *) sensor;
     sensorValue = veml6040_get_green(sensor);
     switch (dev->config.integration_time) {
-        case VEML6040_INTEGRATION_TIME_40MS:
-            ambientLightInLux = sensorValue * VEML6040_GSENS_40MS;
-            break;
-        case VEML6040_INTEGRATION_TIME_80MS:
-            ambientLightInLux = sensorValue * VEML6040_GSENS_80MS;
-            break;
-        case VEML6040_INTEGRATION_TIME_160MS:
-            ambientLightInLux = sensorValue * VEML6040_GSENS_160MS;
-            break;
-        case VEML6040_INTEGRATION_TIME_320MS:
-            ambientLightInLux = sensorValue * VEML6040_GSENS_320MS;
-            break;
-        case VEML6040_INTEGRATION_TIME_640MS:
-            ambientLightInLux = sensorValue * VEML6040_GSENS_640MS;
-            break;
-        case VEML6040_INTEGRATION_TIME_1280MS:
-            ambientLightInLux = sensorValue * VEML6040_GSENS_1280MS;
-            break;
-        default:
-            ambientLightInLux = VEML6040_I2C_ERR_RES;
-            break;
+    case VEML6040_INTEGRATION_TIME_40MS:
+        ambientLightInLux = sensorValue * VEML6040_GSENS_40MS;
+        break;
+    case VEML6040_INTEGRATION_TIME_80MS:
+        ambientLightInLux = sensorValue * VEML6040_GSENS_80MS;
+        break;
+    case VEML6040_INTEGRATION_TIME_160MS:
+        ambientLightInLux = sensorValue * VEML6040_GSENS_160MS;
+        break;
+    case VEML6040_INTEGRATION_TIME_320MS:
+        ambientLightInLux = sensorValue * VEML6040_GSENS_320MS;
+        break;
+    case VEML6040_INTEGRATION_TIME_640MS:
+        ambientLightInLux = sensorValue * VEML6040_GSENS_640MS;
+        break;
+    case VEML6040_INTEGRATION_TIME_1280MS:
+        ambientLightInLux = sensorValue * VEML6040_GSENS_1280MS;
+        break;
+    default:
+        ambientLightInLux = VEML6040_I2C_ERR_RES;
+        break;
     }
     return ambientLightInLux;
 }
@@ -180,17 +174,14 @@ float veml6040_get_cct(veml6040_handle_t sensor, float offset)
     return cct;
 }
 
-#ifdef CONFIG_SENSOR_LIGHT_INCLUDED_VEML6040
+#ifdef CONFIG_SENSOR_INCLUDED_LIGHT
 
-static veml6040_handle_t veml6040 = NULL;
-static bool is_init = false;
-
-esp_err_t light_sensor_veml6040_init(i2c_bus_handle_t i2c_bus)
+esp_err_t light_sensor_veml6040_init(void **sensor_ctx, i2c_bus_handle_t i2c_bus, uint8_t addr)
 {
-    if (is_init || !i2c_bus) {
+    if (!sensor_ctx || !i2c_bus) {
         return ESP_FAIL;
     }
-    veml6040 = veml6040_create(i2c_bus, VEML6040_I2C_ADDRESS);
+    veml6040_handle_t veml6040 = veml6040_create(i2c_bus, addr);
     if (!veml6040) {
         return ESP_FAIL;
     }
@@ -202,37 +193,37 @@ esp_err_t light_sensor_veml6040_init(i2c_bus_handle_t i2c_bus)
     veml6040_info.switch_en = VEML6040_SWITCH_EN;
     esp_err_t ret = veml6040_set_mode(veml6040, &veml6040_info);
     if (ret != ESP_OK) {
+        veml6040_delete(&veml6040);
         return ESP_FAIL;
     }
-    is_init = true;
+    *sensor_ctx = veml6040;
     return ESP_OK;
 }
 
-esp_err_t light_sensor_veml6040_deinit(void)
+esp_err_t light_sensor_veml6040_deinit(void *sensor_ctx)
 {
-    if (!is_init) {
-        return ESP_FAIL;
-    }
-    esp_err_t ret = veml6040_delete(&veml6040);
+    veml6040_handle_t veml6040 = (veml6040_handle_t)sensor_ctx;
 
-    if (ret != ESP_OK) {
+    if (!veml6040) {
         return ESP_FAIL;
     }
-    is_init = false;
+
+    return veml6040_delete(&veml6040);
+}
+
+esp_err_t light_sensor_veml6040_test(void *sensor_ctx)
+{
+    if (!sensor_ctx) {
+        return ESP_FAIL;
+    }
     return ESP_OK;
 }
 
-esp_err_t light_sensor_veml6040_test(void)
+esp_err_t light_sensor_veml6040_acquire_rgbw(void *sensor_ctx, float *r, float *g, float *b, float *w)
 {
-    if (!is_init) {
-        return ESP_FAIL;
-    }
-    return ESP_OK;
-}
+    veml6040_handle_t veml6040 = (veml6040_handle_t)sensor_ctx;
 
-esp_err_t light_sensor_veml6040_acquire_rgbw(float *r, float *g, float *b, float *w)
-{
-    if (!is_init) {
+    if (!veml6040) {
         return ESP_FAIL;
     }
     /*TODO:should more carefully*/
@@ -242,5 +233,26 @@ esp_err_t light_sensor_veml6040_acquire_rgbw(float *r, float *g, float *b, float
     *w = veml6040_get_white(veml6040);
     return ESP_OK;
 }
+
+static esp_err_t light_sensor_veml6040_null_acquire_light_function(void *sensor_ctx, float* l)
+{
+    return ESP_ERR_NOT_SUPPORTED;
+}
+
+static esp_err_t light_sensor_veml6040_null_acquire_uv_function(void *sensor_ctx, float* uv, float* uva, float* uvb)
+{
+    return ESP_ERR_NOT_SUPPORTED;
+}
+
+static light_impl_t veml6040_impl = {
+    .init = light_sensor_veml6040_init,
+    .deinit = light_sensor_veml6040_deinit,
+    .test = light_sensor_veml6040_test,
+    .acquire_light = light_sensor_veml6040_null_acquire_light_function,
+    .acquire_rgbw = light_sensor_veml6040_acquire_rgbw,
+    .acquire_uv = light_sensor_veml6040_null_acquire_uv_function,
+};
+
+SENSOR_HUB_DETECT_FN(LIGHT_SENSOR_ID, veml6040, &veml6040_impl);
 
 #endif

@@ -75,7 +75,7 @@ platforms: Linux, Windows and MacOS.
    ``export PATH=/opt/esp32ulp-elf-binutils/bin:$PATH`` to ``.bashrc``.
 3. Run ``source .bashrc`` to enable the environment variable.
 
-The ULP co-processor assembly enviroment is set up now.
+The ULP co-processor assembly environment is set up now.
 
 3.2 Windows
 ^^^^^^^^^^^
@@ -102,7 +102,7 @@ The ULP co-processor assembly enviroment is set up now.
 5. Save the file and restart MSYS2 console.
 
 Now you should be able to compile ULP programs, e.g.
-:example:`system/ulp_adc`
+`ulp_adc <https://github.com/espressif/esp-iot-solution/tree/release/v1.0/examples/ulp_examples/ulp_adc>`__
 
 3.3 MacOS
 ^^^^^^^^^

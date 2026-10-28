@@ -1,16 +1,8 @@
-// Copyright 2020-2021 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2022-2024 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef _SENSORS_EVENT_H_
 #define _SENSORS_EVENT_H_
@@ -71,10 +63,10 @@ esp_err_t sensors_event_loop_delete(void);
  *  - Others: Fail
  */
 esp_err_t sensors_event_handler_instance_register(esp_event_base_t event_base,
-        int32_t event_id,
-        esp_event_handler_t event_handler,
-        void *event_handler_arg,
-        esp_event_handler_instance_t *context);
+                                                  int32_t event_id,
+                                                  esp_event_handler_t event_handler,
+                                                  void *event_handler_arg,
+                                                  esp_event_handler_instance_t *context);
 
 /**
  * @brief Unregister a handler from the sensors event loop.
@@ -89,17 +81,17 @@ esp_err_t sensors_event_handler_instance_register(esp_event_base_t event_base,
  *  - Others: Fail
  */
 esp_err_t sensors_event_handler_instance_unregister(esp_event_base_t event_base,
-        int32_t event_id,
-        esp_event_handler_instance_t context);
+                                                    int32_t event_id,
+                                                    esp_event_handler_instance_t context);
 
 /**
  * @brief Posts an event to the sensors event loop. The event loop library keeps a copy of event_data and manages
  * the copy's lifetime automatically (allocation + deletion); this ensures that the data the
- * handler recieves is always valid.
+ * handler receives is always valid.
  *
  * @param[in] event_base the event base that identifies the event
  * @param[in] event_id the event id that identifies the event
- * @param[in] event_data the data, specific to the event occurence, that gets passed to the handler
+ * @param[in] event_data the data, specific to the event occurrence, that gets passed to the handler
  * @param[in] event_data_size the size of the event data
  * @param[in] ticks_to_wait number of ticks to block on a full event queue
  *
@@ -119,7 +111,7 @@ esp_err_t sensors_event_post(esp_event_base_t event_base, int32_t event_id,
  *
  * @param[in] event_base the event base that identifies the event
  * @param[in] event_id the event id that identifies the event
- * @param[in] event_data the data, specific to the event occurence, that gets passed to the handler
+ * @param[in] event_data the data, specific to the event occurrence, that gets passed to the handler
  * @param[in] event_data_size the size of the event data; max is 4 bytes
  * @param[out] task_unblocked an optional parameter (can be NULL) which indicates that an event task with
  *                            higher priority than currently running task has been unblocked by the posted event;

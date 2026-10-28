@@ -1,16 +1,9 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 #ifndef _IOT_HDC2010_H_
 #define _IOT_HDC2010_H_
 
@@ -19,42 +12,41 @@ extern "C"
 {
 #endif
 
-#include "driver/i2c.h"
 #include "i2c_bus.h"
 #include "esp_log.h"
 #include "math.h"
 
-#define HDC2010_TEMP_LOW        		0x00 			 /*Temperature [7:0]   */
-#define HDC2010_TEMP_HIGH       		0x01			 /*Temperature [15:8]  */
-#define HDC2010_HUM_LOW         		0x02			 /*Humidity [7:0] */
-#define HDC2010_HUM_HIGH        		0x03			 /*Humidity [15:8]*/
-#define HDC2010_INTERRUPT       		0x04			 /*DataReady and interrupt configuration*/
-#define HDC2010_TEMPE_MAX       		0x05			 /*Max temperature value measured (peak detector)*/
-#define HDC2010_HUM_MAX       			0x06			 /*Max humidity value measured (peak detector)*/
-#define HDC2010_INT_MASK       			0x07			 /*Interrupt Mask*/
-#define HDC2010_TEMP_OFFSET    		 	0x08			 /*Temperature offset adjustment*/
-#define HDC2010_HUM_OFFSET     		 	0x09			 /*Humidity offset adjustment*/
-#define HDC2010_TEMP_THR_L     			0x0A			 /*Temperature Threshold Low*/
-#define HDC2010_TEMP_THR_H      		0x0B			 /*Temperature Threshold High*/
-#define HDC2010_HUM_THR_L       		0x0C			 /*Humidity threshold Low*/
-#define HDC2010_HUM_THR_H       		0x0D			 /*Humidity threshold High*/
-#define HDC2010_RESET_INT_CONF  		0x0E			 /*Soft Reset and Interrupt Configuration*/
-#define HDC2010_MEASURE_CONF    		0x0F			 /*Measurement configuration*/
-#define HDC2010_MANUFACTURER_ID_L       0xFC			 /*Manufacturer ID Low*/
-#define HDC2010_MANUFACTURER_ID_H       0xFD			 /*Manufacturer ID High*/
-#define HDC2010_DEVICE_ID_L      		0xFE			 /*Device ID Low*/
-#define HDC2010_DEVICE_ID_H       		0xFF			 /*Device ID High*/
+#define HDC2010_TEMP_LOW                0x00             /*Temperature [7:0]   */
+#define HDC2010_TEMP_HIGH               0x01             /*Temperature [15:8]  */
+#define HDC2010_HUM_LOW                 0x02             /*Humidity [7:0] */
+#define HDC2010_HUM_HIGH                0x03             /*Humidity [15:8]*/
+#define HDC2010_INTERRUPT               0x04             /*DataReady and interrupt configuration*/
+#define HDC2010_TEMPE_MAX               0x05             /*Max temperature value measured (peak detector)*/
+#define HDC2010_HUM_MAX                 0x06             /*Max humidity value measured (peak detector)*/
+#define HDC2010_INT_MASK                0x07             /*Interrupt Mask*/
+#define HDC2010_TEMP_OFFSET             0x08             /*Temperature offset adjustment*/
+#define HDC2010_HUM_OFFSET              0x09             /*Humidity offset adjustment*/
+#define HDC2010_TEMP_THR_L              0x0A             /*Temperature Threshold Low*/
+#define HDC2010_TEMP_THR_H              0x0B             /*Temperature Threshold High*/
+#define HDC2010_HUM_THR_L               0x0C             /*Humidity threshold Low*/
+#define HDC2010_HUM_THR_H               0x0D             /*Humidity threshold High*/
+#define HDC2010_RESET_INT_CONF          0x0E             /*Soft Reset and Interrupt Configuration*/
+#define HDC2010_MEASURE_CONF            0x0F             /*Measurement configuration*/
+#define HDC2010_MANUFACTURER_ID_L       0xFC             /*Manufacturer ID Low*/
+#define HDC2010_MANUFACTURER_ID_H       0xFD             /*Manufacturer ID High*/
+#define HDC2010_DEVICE_ID_L             0xFE             /*Device ID Low*/
+#define HDC2010_DEVICE_ID_H             0xFF             /*Device ID High*/
 
 #define HDC2010_ERR_VAL                 (-9999)
 
 /* Address 0x08 Temperature Offset Adjustment */
 /* The temperature can be adjusted adding the following values that are enable settings the equivalents bits:*/
-// 7		6		5		4		3		2		1		0
+// 7        6       5       4       3       2       1       0
 //-20.62    10.32   5.16    2.58    1.28    0.64    0.32    0.16
 /* Address 0x09 Humidity Offset Adjustment */
 /* The humidity can be adjusted adding the following values that are enable settings the equivalents bits:*/
-// 7		6		5		4		3		2		1		0
-// -25		12.5	6.3		3.1		1.6		0.8		0.4		0.2
+// 7        6       5       4       3       2       1       0
+// -25      12.5    6.3     3.1     1.6     0.8     0.4     0.2
 typedef enum {
     HDC2010_ADDR_PIN_SELECT_GND = 0x40, /*!< set address PIN select GND  */
     HDC2010_ADDR_PIN_SELECT_VDD = 0x41, /*!< set address PIN select VDD  */
@@ -246,7 +238,7 @@ esp_err_t hdc2010_delete(hdc2010_handle_t *sensor);
  * @param   sensor device object handle of hdc2010
  *
  * @return
- * 	   - HDC2010_ERR_VAL if fails
+ *     - HDC2010_ERR_VAL if fails
  *     - Others temperature value
  */
 float hdc2010_get_temperature(hdc2010_handle_t sensor);
@@ -267,7 +259,7 @@ esp_err_t hdc2010_default_init(hdc2010_handle_t sensor);
  * @param   sensor device object handle of hdc2010
  *
  * @return
- * 	   - HDC2010_ERR_VAL if fails
+ *     - HDC2010_ERR_VAL if fails
  *     - Others, humidity value
  */
 float hdc2010_get_humidity(hdc2010_handle_t sensor);

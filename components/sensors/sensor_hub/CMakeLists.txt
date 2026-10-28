@@ -1,12 +1,11 @@
-#common requires
-set(requires bus)
-#imu sensor requires
-list(APPEND requires mpu6050 lis2dh12)
-#humiture sensor requires
-list(APPEND requires sht3x hts221)
-#light sensor requires
-list(APPEND requires bh1750 veml6040 veml6075)
+if("${IDF_VERSION_MAJOR}.${IDF_VERSION_MINOR}" VERSION_GREATER_EQUAL "5.3")
+    set(PRIV_REQ "esp_driver_gpio")
+else()
+    set(PRIV_REQ "driver")
+endif()
 
 idf_component_register(SRC_DIRS "." "hal"
                         INCLUDE_DIRS "include"
-                        REQUIRES "${requires}")
+                        REQUIRES "esp_event" "esp_timer"
+                        PRIV_REQUIRES ${PRIV_REQ}
+                        LDFRAGMENTS linker.lf)

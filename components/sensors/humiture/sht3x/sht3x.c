@@ -1,22 +1,15 @@
-// Copyright 2020-2021 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2022-2026 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #include <stdio.h>
-#include "driver/i2c.h"
 #include "i2c_bus.h"
 #include "esp_log.h"
 #include "esp_system.h"
+#include "esp_timer.h"
+#include "iot_sensor_hub.h"
 #include "sht3x.h"
 
 typedef struct {
@@ -99,24 +92,24 @@ esp_err_t sht3x_measure_period(bool set, uint16_t *min_delay)
     //set value
     uint8_t delay_mode = *min_delay >> 8;
     switch (delay_mode) {
-        case 0x20:
-            s_min_delay = 2000;
-            break;
-        case 0x21:
-            s_min_delay = 1000;
-            break;
-        case 0x22:
-            s_min_delay = 500;
-            break;
-        case 0x24:
-            s_min_delay = 250;
-            break;
-        case 0x27:
-            s_min_delay = 100;
-            break;
-        default:
-            s_min_delay = 250;
-            break;
+    case 0x20:
+        s_min_delay = 2000;
+        break;
+    case 0x21:
+        s_min_delay = 1000;
+        break;
+    case 0x22:
+        s_min_delay = 500;
+        break;
+    case 0x24:
+        s_min_delay = 250;
+        break;
+    case 0x27:
+        s_min_delay = 100;
+        break;
+    default:
+        s_min_delay = 250;
+        break;
     }
     return ESP_OK;
 }
@@ -145,7 +138,7 @@ esp_err_t sht3x_get_humiture(sht3x_handle_t sensor, float *Tem_val, float *Hum_v
     if ((Temperature >= -20) && (Temperature <= 125) && (Humidity >= 0) && (Humidity <= 100)) {
         *Tem_val = Temperature;
         *Hum_val = Humidity;
-        return ESP_OK;                                        /*!< here is mesurement range */
+        return ESP_OK;                                        /*!< here is measurement range */
     } else {
         return ESP_FAIL;
     }
@@ -225,18 +218,15 @@ esp_err_t sht3x_heater(sht3x_handle_t sensor, sht3x_cmd_measure_t sht3x_heater_c
     return ret;
 }
 
-#ifdef CONFIG_SENSOR_HUMITURE_INCLUDED_SHT3X
+#ifdef CONFIG_SENSOR_INCLUDED_HUMITURE
 
-static sht3x_handle_t sht3x = NULL;
-static bool is_init = false;
-
-esp_err_t humiture_sht3x_init(i2c_bus_handle_t i2c_bus)
+esp_err_t humiture_sht3x_init(void **sensor_ctx, i2c_bus_handle_t i2c_bus, uint8_t addr)
 {
-    if (is_init || !i2c_bus) {
+    if (!sensor_ctx || !i2c_bus) {
         return ESP_FAIL;
     }
 
-    sht3x = sht3x_create(i2c_bus, SHT3x_ADDR_PIN_SELECT_VSS);
+    sht3x_handle_t sht3x = sht3x_create(i2c_bus, addr);
 
     if (!sht3x) {
         return ESP_FAIL;
@@ -245,41 +235,39 @@ esp_err_t humiture_sht3x_init(i2c_bus_handle_t i2c_bus)
     esp_err_t ret = sht3x_set_measure_mode(sht3x, SHT3x_PER_4_MEDIUM); /**medium accuracy/repeatability with 250ms period (1000ms/4)**/
 
     if (ret != ESP_OK) {
+        sht3x_delete(&sht3x);
         return ESP_FAIL;
     }
 
-    is_init = true;
+    *sensor_ctx = sht3x;
     return ESP_OK;
 }
 
-esp_err_t humiture_sht3x_deinit(void)
+esp_err_t humiture_sht3x_deinit(void *sensor_ctx)
 {
-    if (!is_init) {
+    sht3x_handle_t sht3x = (sht3x_handle_t)sensor_ctx;
+
+    if (!sht3x) {
         return ESP_FAIL;
     }
 
-    esp_err_t ret = sht3x_delete(&sht3x);
-
-    if (ret != ESP_OK) {
-        return ESP_FAIL;
-    }
-
-    is_init = false;
-    return ESP_OK;
+    return sht3x_delete(&sht3x);
 }
 
-esp_err_t humiture_sht3x_test(void)
+esp_err_t humiture_sht3x_test(void *sensor_ctx)
 {
-    if (!is_init) {
+    if (!sensor_ctx) {
         return ESP_FAIL;
     }
 
     return ESP_OK;
 }
 
-esp_err_t humiture_sht3x_acquire_humidity(float *h)
+esp_err_t humiture_sht3x_acquire_humidity(void *sensor_ctx, float *h)
 {
-    if (!is_init) {
+    sht3x_handle_t sht3x = (sht3x_handle_t)sensor_ctx;
+
+    if (!sht3x) {
         return ESP_FAIL;
     }
 
@@ -291,14 +279,15 @@ esp_err_t humiture_sht3x_acquire_humidity(float *h)
         *h = humidity;
         return ESP_OK;
     }
-
     *h = 0;
     return ESP_FAIL;
 }
 
-esp_err_t humiture_sht3x_acquire_temperature(float *t)
+esp_err_t humiture_sht3x_acquire_temperature(void *sensor_ctx, float *t)
 {
-    if (!is_init) {
+    sht3x_handle_t sht3x = (sht3x_handle_t)sensor_ctx;
+
+    if (!sht3x) {
         return ESP_FAIL;
     }
 
@@ -314,5 +303,15 @@ esp_err_t humiture_sht3x_acquire_temperature(float *t)
     *t = 0;
     return ESP_FAIL;
 }
+
+static humiture_impl_t sht3x_impl = {
+    .init = humiture_sht3x_init,
+    .deinit = humiture_sht3x_deinit,
+    .test = humiture_sht3x_test,
+    .acquire_humidity = humiture_sht3x_acquire_humidity,
+    .acquire_temperature = humiture_sht3x_acquire_temperature,
+};
+
+SENSOR_HUB_DETECT_FN(HUMITURE_ID, sht3x, &sht3x_impl);
 
 #endif

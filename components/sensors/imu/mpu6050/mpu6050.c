@@ -1,16 +1,9 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
@@ -19,7 +12,6 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "mpu6050.h"
-
 
 #define WRITE_BIT  I2C_MASTER_WRITE /*!< I2C master write */
 #define READ_BIT   I2C_MASTER_READ  /*!< I2C master read */
@@ -180,20 +172,20 @@ esp_err_t mpu6050_get_acce_sensitivity(mpu6050_handle_t sensor, float *acce_sens
     ret = i2c_bus_read_byte(sens->i2c_dev, MPU6050_ACCEL_CONFIG, &acce_fs);
     acce_fs = (acce_fs >> 3) & 0x03;
     switch (acce_fs) {
-        case ACCE_FS_2G:
-            *acce_sensitivity = 16384;
-            break;
-        case ACCE_FS_4G:
-            *acce_sensitivity = 8192;
-            break;
-        case ACCE_FS_8G:
-            *acce_sensitivity = 4096;
-            break;
-        case ACCE_FS_16G:
-            *acce_sensitivity = 2048;
-            break;
-        default:
-            break;
+    case ACCE_FS_2G:
+        *acce_sensitivity = 16384;
+        break;
+    case ACCE_FS_4G:
+        *acce_sensitivity = 8192;
+        break;
+    case ACCE_FS_8G:
+        *acce_sensitivity = 4096;
+        break;
+    case ACCE_FS_16G:
+        *acce_sensitivity = 2048;
+        break;
+    default:
+        break;
     }
     return ret;
 }
@@ -206,20 +198,20 @@ esp_err_t mpu6050_get_gyro_sensitivity(mpu6050_handle_t sensor, float *gyro_sens
     ret = i2c_bus_read_byte(sens->i2c_dev, MPU6050_ACCEL_CONFIG, &gyro_fs);
     gyro_fs = (gyro_fs >> 3) & 0x03;
     switch (gyro_fs) {
-        case GYRO_FS_250DPS:
-            *gyro_sensitivity = 131;
-            break;
-        case GYRO_FS_500DPS:
-            *gyro_sensitivity = 65.5;
-            break;
-        case GYRO_FS_1000DPS:
-            *gyro_sensitivity = 32.8;
-            break;
-        case GYRO_FS_2000DPS:
-            *gyro_sensitivity = 16.4;
-            break;
-        default:
-            break;
+    case GYRO_FS_250DPS:
+        *gyro_sensitivity = 131;
+        break;
+    case GYRO_FS_500DPS:
+        *gyro_sensitivity = 65.5;
+        break;
+    case GYRO_FS_1000DPS:
+        *gyro_sensitivity = 32.8;
+        break;
+    case GYRO_FS_2000DPS:
+        *gyro_sensitivity = 16.4;
+        break;
+    default:
+        break;
     }
     return ret;
 }
@@ -293,7 +285,7 @@ esp_err_t mpu6050_get_gyro(mpu6050_handle_t sensor, mpu6050_gyro_value_t *gyro_v
 }
 
 esp_err_t mpu6050_complimentory_filter(mpu6050_handle_t sensor, mpu6050_acce_value_t *acce_value,
-        mpu6050_gyro_value_t *gyro_value, complimentary_angle_t *complimentary_angle)
+                                       mpu6050_gyro_value_t *gyro_value, complimentary_angle_t *complimentary_angle)
 {
     float acce_angle[2];
     float gyro_angle[2];

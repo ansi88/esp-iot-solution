@@ -1,16 +1,8 @@
-// Copyright 2020-2021 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2022-2026 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef _IOT_SENSOR_HUB_H_
 #define _IOT_SENSOR_HUB_H_
@@ -32,65 +24,90 @@
 #include "sensor_event.h"
 #include "sensor_type.h"
 
-/** @cond **/
-/* SENSORS IMU EVENTS BASE */
-ESP_EVENT_DECLARE_BASE(SENSOR_IMU_EVENTS);
-ESP_EVENT_DECLARE_BASE(SENSOR_HUMITURE_EVENTS);
-ESP_EVENT_DECLARE_BASE(SENSOR_LIGHTSENSOR_EVENTS);
-/** @endcond **/
+typedef void *sensor_handle_t;                                                                                                        /*!< sensor handle*/
+typedef void *sensor_event_handler_instance_t;                                                                                        /*!< sensor event handler handle*/
+typedef const char *sensor_event_base_t;                                                                                              /*!< unique pointer to a subsystem that exposes events */
 
-typedef void *sensor_handle_t;  /*!< sensor handle*/
-typedef void *sensor_event_handler_instance_t;  /*!< sensor event handler handle*/
-typedef const char *sensor_event_base_t; /*!< unique pointer to a subsystem that exposes events */
-
-typedef void (*sensor_event_handler_t)(void *event_handler_arg, sensor_event_base_t event_base, int32_t event_id, void *event_data); /*!< function called when an event is posted to the queue */
+typedef void (*sensor_event_handler_t)(void *event_handler_arg, sensor_event_base_t event_base, int32_t event_id, void *event_data);  /*!< function called when an event is posted to the queue */
 
 extern const char *SENSOR_TYPE_STRING[];
 extern const char *SENSOR_MODE_STRING[];
 
 /**
- * @brief sensor id, used for iot_sensor_create
- * 
- */
-typedef enum {
-#ifdef CONFIG_SENSOR_INCLUDED_HUMITURE
-    SENSOR_SHT3X_ID = (HUMITURE_ID << SENSOR_ID_OFFSET) | SHT3X_ID, /*!< sht3x sensor id*/
-    SENSOR_HTS221_ID = (HUMITURE_ID << SENSOR_ID_OFFSET) | HTS221_ID, /*!< hts221 sensor id*/
-#endif
-#ifdef CONFIG_SENSOR_INCLUDED_IMU
-    SENSOR_MPU6050_ID = ((IMU_ID << SENSOR_ID_OFFSET) | MPU6050_ID), /*!< mpu6050 sensor id*/
-    SENSOR_LIS2DH12_ID = ((IMU_ID << SENSOR_ID_OFFSET) | LIS2DH12_ID), /*!< lis2dh12 sensor id*/
-#endif
-#ifdef CONFIG_SENSOR_INCLUDED_LIGHT
-    SENSOR_BH1750_ID = (LIGHT_SENSOR_ID << SENSOR_ID_OFFSET) | BH1750_ID, /*!< bh1750 sensor id*/
-    SENSOR_VEML6040_ID = (LIGHT_SENSOR_ID << SENSOR_ID_OFFSET) | VEML6040_ID, /*!< veml6040 sensor id*/
-    SENSOR_VEML6075_ID = (LIGHT_SENSOR_ID << SENSOR_ID_OFFSET) | VEML6075_ID, /*!< veml6075 sensor id*/
-#endif
-} sensor_id_t;
-
-/**
- * @brief sensor information type
- * 
+ * @brief sensor information, written by the driver developer.
+ *
  */
 typedef struct {
-    const char* name;  /*!< sensor name*/
-    const char* desc;  /*!< sensor descriptive message*/
-    sensor_id_t sensor_id;  /*!< sensor id*/
-    const uint8_t *addrs;  /*!< sensor address list*/
+    const char *name;          /*!< sensor name */
+    sensor_type_t sensor_type; /*!< sensor type */
 } sensor_info_t;
 
 /**
  * @brief sensor initialization parameter
- * 
+ *
  */
 typedef struct {
-    bus_handle_t bus;                           /*!< i2c/spi bus handle*/
-    sensor_mode_t mode;                         /*!< set acquire mode detiled in sensor_mode_t*/
-    sensor_range_t range;                       /*!< set measuring range*/
-    uint32_t min_delay;                         /*!< set minimum acquisition interval*/
-    int intr_pin;                               /*!< set interrupt pin */
-    int intr_type;                              /*!< set interrupt type*/
+    bus_handle_t bus;     /*!< i2c/spi bus handle*/
+    uint8_t addr;         /*!< set addr of sensor*/
+    sensor_type_t type;   /*!< sensor type */
+    sensor_mode_t mode;   /*!< set acquire mode detiled in sensor_mode_t*/
+    sensor_range_t range; /*!< set measuring range*/
+    uint32_t min_delay;   /*!< set minimum acquisition interval*/
+    int intr_pin;         /*!< set interrupt pin */
+    int intr_type;        /*!< set interrupt type*/
 } sensor_config_t;
+
+/**
+ * @brief Detection function interface for sensors
+ */
+typedef struct {
+    /**
+     * @brief Function pointer for sensor detection
+     *
+     * This function detects a sensor based on the provided sensor information.
+     *
+     * @param sensor_info Pointer to the sensor information structure
+     * @return void* Pointer to the detected sensor instance, or NULL if detection failed
+     */
+    void* (*fn)(sensor_info_t *sensor_info);
+} sensor_hub_detect_fn_t;
+
+/**
+ * @brief Defines a sensor detection function to be executed automatically in the application layer.
+ *
+ * @param type_id  The sensor type identifier.
+ * @param name_id  The unique name identifier for the sensor.
+ * @param impl     The implementation returned on successful detection.
+ *
+ * This macro defines a function and its corresponding metadata to facilitate automatic sensor detection
+ * and initialization. The function must return the implementation (`impl`) on success; otherwise,
+ * an error is logged, and the automatic detection process in the application layer will be aborted.
+ *
+ * To prevent the linker from optimizing out the sensor driver, the driver must include at least one
+ * undefined symbol that is explicitly referenced during the linking phase. This ensures that the linker
+ * retains the driver, even if no other files directly depend on its symbols.
+ *
+ * For example, in the sensor driver's `CMakeLists.txt`, include the following to force the linker
+ * to keep the required symbol:
+ *
+ *  target_link_libraries(${COMPONENT_LIB} INTERFACE "-u <symbol_name>")
+ *
+ * Replace `<symbol_name>` with an appropriate symbol, such as `sht3x_init`, defined in the driver.
+ */
+#define SENSOR_HUB_DETECT_FN(type_id, name_id, impl) \
+    static void*  __sensor_hub_detect_fn_##name_id(sensor_info_t *sensor_info); \
+    __attribute__((used)) _SECTION_ATTR_IMPL(".sensor_hub_detect_fn", __COUNTER__) \
+        sensor_hub_detect_fn_t sensor_hub_detect_fn_##name_id = { \
+            .fn = __sensor_hub_detect_fn_##name_id, \
+        }; \
+    static void* __sensor_hub_detect_fn_##name_id(sensor_info_t *sensor_info) { \
+        sensor_info->name = #name_id; \
+        sensor_info->sensor_type = type_id; \
+        return impl; \
+    }
+
+extern sensor_hub_detect_fn_t __sensor_hub_detect_fn_array_start;
+extern sensor_hub_detect_fn_t __sensor_hub_detect_fn_array_end;
 
 #ifdef __cplusplus
 extern "C"
@@ -98,16 +115,16 @@ extern "C"
 #endif
 
 /**
- * @brief Create a sensor instance with specified sensor_id and desired configurations.
- * 
- * @param sensor_id sensor's id detailed in sensor_id_t.
+ * @brief Create a sensor instance with specified name and desired configurations.
+ *
+ * @param sensor_name sensor's name. Sensor information will be registered by ESP_SENSOR_DETECT_FN
  * @param config sensor's configurations detailed in sensor_config_t
  * @param p_sensor_handle return sensor handle if succeed, NULL if failed.
  * @return esp_err_t
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
  */
-esp_err_t iot_sensor_create(sensor_id_t sensor_id, const sensor_config_t *config, sensor_handle_t *p_sensor_handle);
+esp_err_t iot_sensor_create(const char *sensor_name, const sensor_config_t *config, sensor_handle_t *p_sensor_handle);
 
 /**
  * @brief start sensor acquisition, post data ready events when data acquired.
@@ -135,23 +152,75 @@ esp_err_t iot_sensor_stop(sensor_handle_t sensor_handle);
 /**
  * @brief delete and release the sensor resource.
  *
- * @param p_sensor_handle point to sensor handle, will set to NULL if delete suceed.
+ * @param p_sensor_handle sensor handle, will set to NULL if delete succeed.
  * @return esp_err_t
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
  */
-esp_err_t iot_sensor_delete(sensor_handle_t *p_sensor_handle);
+esp_err_t iot_sensor_delete(sensor_handle_t p_sensor_handle);
 
 /**
- * @brief Scan for valid sensors attached on bus
- * 
- * @param bus bus handle
- * @param buf Pointer to a buffer to save sensors' information, if NULL no information will be saved.
- * @param num Maximum number of sensor information to save, invalid if buf set to NULL, 
- * latter sensors will be discarded if num less-than the total number found on the bus.
- * @return uint8_t total number of valid sensors found on the bus 
+ * @brief Scan for valid sensors registered in the system
+ *
+ * Both link-time drivers (registered via SENSOR_HUB_DETECT_FN) and drivers
+ * registered at runtime via iot_sensor_register_driver() are reported.
+ *
+ * @return int number of valid sensors
  */
-uint8_t iot_sensor_scan(bus_handle_t bus, sensor_info_t* buf[], uint8_t num);
+int iot_sensor_scan();
+
+/**
+ * @brief Register a sensor driver implementation at runtime.
+ *
+ * This is the runtime counterpart of the link-time SENSOR_HUB_DETECT_FN macro.
+ * After registration, the driver can be instantiated by name through
+ * iot_sensor_create() exactly like a link-time driver. Runtime-registered
+ * drivers take precedence over link-time drivers sharing the same name.
+ *
+ * @note The framework does not copy @p sensor_name nor @p impl; the caller must
+ *       keep both valid until the driver is unregistered and all sensor
+ *       instances created from it are deleted.
+ * @note Registration should be done before iot_sensor_create() is called for
+ *       that name, mirroring the link-time flow.
+ *
+ * @param sensor_name unique name of the driver, used for lookup in iot_sensor_create
+ * @param sensor_type sensor type declared in sensor_type_t
+ * @param impl driver implementation table (humiture_impl_t/imu_impl_t/light_impl_t *)
+ *             matching the sensor_type
+ * @return esp_err_t
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG invalid name/impl/type
+ *     - ESP_ERR_INVALID_STATE a driver with the same name is already registered
+ *     - ESP_ERR_NO_MEM out of memory
+ */
+esp_err_t iot_sensor_register_driver(const char *sensor_name, sensor_type_t sensor_type, void *impl);
+
+/**
+ * @brief Unregister a runtime-registered sensor driver.
+ *
+ * Only drivers added with iot_sensor_register_driver() can be removed; link-time
+ * drivers are unaffected. Existing sensor instances created from the driver are
+ * not deleted and remain valid.
+ *
+ * @param sensor_name name passed to iot_sensor_register_driver
+ * @return esp_err_t
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG name is NULL
+ *     - ESP_ERR_NOT_FOUND no runtime driver with that name
+ */
+esp_err_t iot_sensor_unregister_driver(const char *sensor_name);
+
+/**
+ * @brief Resolve a driver implementation table by name.
+ *
+ * Looks up the runtime registry first, then the link-time SENSOR_HUB_DETECT_FN
+ * section. Primarily intended for internal use by the sensor HAL layer.
+ *
+ * @param sensor_name name to look up
+ * @param[out] sensor_type optional, receives the driver's sensor type if found
+ * @return void* the driver implementation table, or NULL if not found
+ */
+void *iot_sensor_find_driver(const char *sensor_name, sensor_type_t *sensor_type);
 
 /**
  * @brief Register a event handler to a sensor's event with sensor_handle.
@@ -185,8 +254,8 @@ esp_err_t iot_sensor_handler_unregister(sensor_handle_t sensor_handle, sensor_ev
  * @brief Register a event handler with sensor_type instead of sensor_handle.
  * the api only care about the event type, don't care who post it.
  *
- * @param sensor_type sensor type decleared in sensor_type_t.
- * @param event_id sensor event decleared in sensor_event_id_t and sensor_data_event_id_t
+ * @param sensor_type sensor type declared in sensor_type_t.
+ * @param event_id sensor event declared in sensor_event_id_t and sensor_data_event_id_t
  * @param handler the handler function which gets called when the event is dispatched
  * @param context An event handler instance object related to the registered event handler and data, can be NULL.
  *                This needs to be kept if the specific callback instance should be unregistered before deleting the whole
@@ -204,8 +273,8 @@ esp_err_t iot_sensor_handler_register_with_type(sensor_type_t sensor_type, int32
  * @brief Unregister a event handler from a event.
  * the api only care about the event type, don't care who post it.
  *
- * @param sensor_type sensor type decleared in sensor_type_t.
- * @param event_id sensor event decleared in sensor_event_id_t and sensor_data_event_id_t
+ * @param sensor_type sensor type declared in sensor_type_t.
+ * @param event_id sensor event declared in sensor_event_id_t and sensor_data_event_id_t
  * @param context the instance object of the registration to be unregistered
  * @return esp_err_t
  *     - ESP_OK Success
@@ -214,7 +283,6 @@ esp_err_t iot_sensor_handler_register_with_type(sensor_type_t sensor_type, int32
 esp_err_t iot_sensor_handler_unregister_with_type(sensor_type_t sensor_type, int32_t event_id, sensor_event_handler_instance_t context);
 
 #ifdef __cplusplus
-extern "C"
 }
 #endif
 #endif

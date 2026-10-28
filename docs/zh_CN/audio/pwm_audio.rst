@@ -2,8 +2,7 @@ PWM 音频
 ==============
 :link_to_translation:`en:[English]`
 
-PWM 音频功能使用 ESP32 内部的 LEDC 外设产生 PWM 播放音频，无需使用外部的音频 Codec 芯片，适用于对音质要求不高而对成本敏感的应用。
-
+PWM 音频功能使用 ESP32 系列芯片的内部 LEDC 外设产生 PWM 播放音频，无需使用外部的音频 Codec 芯片，适用于对音质要求不高而对成本敏感的应用。
 
 特性
 ------
@@ -57,18 +56,18 @@ PWM 频率
     pac.ringbuf_len        = 1024 * 8;
 
     pwm_audio_init(&pac));             /**< Initialize pwm audio */
-    pwm_audio_set_param(48000, 8, 2);  /**< Set sample rate, bits and channel numner */
+    pwm_audio_set_param(48000, 8, 2);  /**< Set sample rate, bits and channel number */
     pwm_audio_start();                 /**< Start to run */
 
     while(1) {
 
-        //< Perpare audio data, such as decode mp3/wav file
+        //< Prepare audio data, such as decode mp3/wav file
 
-        /**< Write data to paly */
+        /**< Write data to play */
         pwm_audio_write(audio_data, length, &written, 1000 / portTICK_PERIOD_MS);
     }
 
 API 参考
 -------------
 
-.. include:: /_build/inc/pwm_audio.inc
+.. include-build-file:: inc/pwm_audio.inc

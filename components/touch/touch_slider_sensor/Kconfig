@@ -1,0 +1,32 @@
+menu "Touch Slider Sensor Configuration"
+
+    config TOUCH_SLIDER_SENSOR_DEBUG
+        bool "Enable touch slider sensor debug mode"
+        default n
+        select TOUCH_SENSOR_FSM_DEBUG
+        help
+            Print complete fused FSM snapshots in the vl CSV format.
+
+    config TOUCH_SLIDER_SENSOR_QUANTIFY_LOWER_THRESHOLD_X1000
+        int "Quantify lower threshold (/1000)"
+        default 300
+        range 0 10000
+        help
+            Normalized fused amplitude below this ratio of the configured
+            channel threshold is ignored by the position estimator.
+
+    config TOUCH_SLIDER_SENSOR_POS_FILTER_SIZE
+        int "Position filter size"
+        default 10
+        range 1 100
+        help
+            Window length for the slider position moving average.
+
+    config TOUCH_SLIDER_SENSOR_POS_FILTER_FACTOR
+        int "Position filter factor"
+        default 2
+        range 1 10
+        help
+            Divisor of the position IIR filter. One disables the IIR tail.
+
+endmenu

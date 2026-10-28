@@ -1,16 +1,9 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2022-2024 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 #ifndef _HTS221_H_
 #define _HTS221_H_
 #ifdef __cplusplus
@@ -359,10 +352,10 @@ esp_err_t hts221_delete(hts221_handle_t *sensor);
 esp_err_t hts221_get_deviceid(hts221_handle_t sensor, uint8_t *deviceid);
 
 /**
- * @brief Set configration of HTS221
+ * @brief Set configuration of HTS221
  *
  * @param sensor object handle of hts221
- * @param hts221_config a structure pointer of configration
+ * @param hts221_config a structure pointer of configuration
  *
  * @return
  *     - ESP_OK Success
@@ -371,10 +364,10 @@ esp_err_t hts221_get_deviceid(hts221_handle_t sensor, uint8_t *deviceid);
 esp_err_t hts221_set_config(hts221_handle_t sensor, hts221_config_t *hts221_config);
 
 /**
- * @brief Get configration of HTS221
+ * @brief Get configuration of HTS221
  *
  * @param sensor object handle of hts221
- * @param hts221_config a structure pointer of configration
+ * @param hts221_config a structure pointer of configuration
  *
  * @return
  *     - ESP_OK Success
@@ -442,7 +435,7 @@ esp_err_t hts221_set_avgt(hts221_handle_t sensor, hts221_avgt_t avgt);
  * @brief Enable block data update
  *
  * @param sensor object handle of hts221
- * @param status enable/diable status
+ * @param status enable/disable status
  *
  * @return
  *     - ESP_OK Success
@@ -465,7 +458,7 @@ esp_err_t hts221_memory_boot(hts221_handle_t sensor);
  * @brief Enable heater
  *
  * @param sensor object handle of hts221
- * @param status enable/diable status
+ * @param status enable/disable status
  *
  * @return
  *     - ESP_OK Success
@@ -512,7 +505,7 @@ esp_err_t hts221_set_irq_outputtype(hts221_handle_t sensor, hts221_outputtype_t 
  * @brief Enable/disable the interrupt mode
  *
  * @param sensor object handle of hts221
- * @param status enable/diable status
+ * @param status enable/disable status
  *
  * @return
  *     - ESP_OK Success

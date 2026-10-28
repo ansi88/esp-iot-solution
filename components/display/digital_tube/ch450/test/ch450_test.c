@@ -1,16 +1,9 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 #include <stdio.h>
 #include "ch450.h"
 #include "unity.h"
@@ -19,7 +12,6 @@
 #define I2C_MASTER_SDA_IO 22
 #define I2C_MASTER_SCL_IO 23
 #define I2C_MASTER_FREQ_HZ 100000
-
 
 TEST_CASE("I2C CH450 test", "[ch450][iot][led]")
 {
@@ -47,4 +39,3 @@ TEST_CASE("I2C CH450 test", "[ch450][iot][led]")
     ch450_delete(seg);
     i2c_bus_delete(&i2c_bus);
 }
-

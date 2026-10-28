@@ -1,0 +1,18 @@
+menu "Touch Proximity Sensor"
+
+    config TOUCH_PROXIMITY_SENSOR_DEBUG
+        bool "Enable touch proximity sensor debug mode"
+        default n
+        select TOUCH_SENSOR_FSM_DEBUG
+        help
+            Print complete fused FSM snapshots in the vl CSV format.
+
+    config TOUCH_PROXIMITY_MEAS_COUNT
+        int "Default measurement count"
+        default 20
+        range 1 255
+        help
+            Number of measurements accumulated for one proximity frame.
+            The FSM sample period includes this count.
+
+endmenu

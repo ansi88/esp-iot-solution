@@ -1,16 +1,9 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2022-2024 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 #ifndef __MPU6050_H_
 #define __MPU6050_H_
 
@@ -115,10 +108,10 @@ typedef enum {
 } mpu6050_acce_fs_t;
 
 typedef enum {
-    GYRO_FS_250DPS  = 0,     /*!< Gyroscope full scale range is +/- 250 degree per sencond */
-    GYRO_FS_500DPS  = 1,     /*!< Gyroscope full scale range is +/- 500 degree per sencond */
-    GYRO_FS_1000DPS = 2,     /*!< Gyroscope full scale range is +/- 1000 degree per sencond */
-    GYRO_FS_2000DPS = 3,     /*!< Gyroscope full scale range is +/- 2000 degree per sencond */
+    GYRO_FS_250DPS  = 0,     /*!< Gyroscope full scale range is +/- 250 degree per second */
+    GYRO_FS_500DPS  = 1,     /*!< Gyroscope full scale range is +/- 500 degree per second */
+    GYRO_FS_1000DPS = 2,     /*!< Gyroscope full scale range is +/- 1000 degree per second */
+    GYRO_FS_2000DPS = 3,     /*!< Gyroscope full scale range is +/- 2000 degree per second */
 } mpu6050_gyro_fs_t;
 
 typedef struct {
@@ -330,7 +323,7 @@ esp_err_t mpu6050_get_acce(mpu6050_handle_t sensor, mpu6050_acce_value_t *acce_v
 esp_err_t mpu6050_get_gyro(mpu6050_handle_t sensor, mpu6050_gyro_value_t *gyro_value);
 
 /**
- * @brief use complimentory filter to caculate roll and pitch
+ * @brief use complimentory filter to calculate roll and pitch
  *
  * @param acce_value accelerometer measurements
  * @param gyro_value gyroscope measurements
@@ -341,14 +334,14 @@ esp_err_t mpu6050_get_gyro(mpu6050_handle_t sensor, mpu6050_gyro_value_t *gyro_v
  *     - ESP_FAIL Fail
  */
 esp_err_t mpu6050_complimentory_filter(mpu6050_handle_t sensor, mpu6050_acce_value_t *acce_value,
-        mpu6050_gyro_value_t *gyro_value, complimentary_angle_t *complimentary_angle);
+                                       mpu6050_gyro_value_t *gyro_value, complimentary_angle_t *complimentary_angle);
 
 /***implements of imu hal interface****/
 #ifdef CONFIG_SENSOR_IMU_INCLUDED_MPU6050
 
 /**
  * @brief initialize mpu6050 with default configurations
- * 
+ *
  * @param i2c_bus i2c bus handle the sensor will attached to
  * @return
  *     - ESP_OK Success
@@ -358,7 +351,7 @@ esp_err_t imu_mpu6050_init(i2c_bus_handle_t i2c_bus);
 
 /**
  * @brief de-initialize mpu6050
- * 
+ *
  * @return
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
@@ -367,7 +360,7 @@ esp_err_t imu_mpu6050_deinit(void);
 
 /**
  * @brief test if mpu6050 is active
- * 
+ *
  * @return
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
@@ -376,7 +369,7 @@ esp_err_t imu_mpu6050_test(void);
 
 /**
  * @brief acquire mpu6050 accelerometer result one time.
- * 
+ *
  * @param acce_x result data (unit:g)
  * @param acce_y result data (unit:g)
  * @param acce_z result data (unit:g)
@@ -388,7 +381,7 @@ esp_err_t imu_mpu6050_acquire_acce(float *acce_x, float *acce_y, float *acce_z);
 
 /**
  * @brief acquire mpu6050 gyroscope result one time.
- * 
+ *
  * @param gyro_x result data (unit:dps)
  * @param gyro_y result data (unit:dps)
  * @param gyro_z result data (unit:dps)
@@ -400,7 +393,7 @@ esp_err_t imu_mpu6050_acquire_gyro(float *gyro_x, float *gyro_y, float *gyro_z);
 
 /**
  * @brief set mpu6050 to sleep mode.
- * 
+ *
  * @return
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
@@ -409,7 +402,7 @@ esp_err_t imu_mpu6050_sleep(void);
 
 /**
  * @brief wakeup mpu6050 from sleep mode.
- * 
+ *
  * @return
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
@@ -423,4 +416,3 @@ esp_err_t imu_mpu6050_wakeup(void);
 #endif
 
 #endif
-

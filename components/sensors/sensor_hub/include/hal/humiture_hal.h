@@ -1,19 +1,13 @@
-// Copyright 2020-2021 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2022-2026 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef _HUMITURE_HAL_H_
 #define _HUMITURE_HAL_H_
+
+#ifdef CONFIG_SENSOR_INCLUDED_HUMITURE
 
 #include "i2c_bus.h"
 #include "sensor_type.h"
@@ -21,14 +15,86 @@
 typedef void *sensor_humiture_handle_t; /*!< humiture sensor handle*/
 
 /**
- * @brief humiture sensor id, used for humiture_create
- * 
+ * @brief Implementation Interface for Humiture Sensors
+ *
  */
-typedef enum {
-    SHT3X_ID = 0x01, /*!< sht3x humiture sensor id*/
-    HTS221_ID, /*!< hts221 humiture sensor id*/
-    HUMITURE_MAX_ID, /*!< max humiture sensor id*/
-} humiture_id_t;
+typedef struct {
+    /**
+     * @brief Initialize the humiture sensor
+     *
+     * @param[out] sensor_ctx Pointer to receive the driver's per-instance context
+     * @param handle The bus handle
+     * @param addr The I2C address of the sensor
+     * @return esp_err_t Result of initialization
+     */
+    esp_err_t (*init)(void **sensor_ctx, bus_handle_t handle, uint8_t addr);
+
+    /**
+     * @brief Deinitialize the humiture sensor
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of deinitialization
+     */
+    esp_err_t (*deinit)(void *sensor_ctx);
+
+    /**
+     * @brief Test the humiture sensor
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of the test
+     */
+    esp_err_t (*test)(void *sensor_ctx);
+
+    /**
+     * @brief Acquire humidity data from the sensor
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @param[out] humidity Pointer to store the humidity data
+     * @return esp_err_t Result of acquiring data
+     */
+    esp_err_t (*acquire_humidity)(void *sensor_ctx, float *humidity);
+
+    /**
+     * @brief Acquire temperature data from the sensor
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @param[out] temperature Pointer to store the temperature data
+     * @return esp_err_t Result of acquiring data
+     */
+    esp_err_t (*acquire_temperature)(void *sensor_ctx, float *temperature);
+
+    /**
+     * @brief Put the humiture sensor to sleep
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of the sleep operation
+     */
+    esp_err_t (*sleep)(void *sensor_ctx);
+
+    /**
+     * @brief Wake up the humiture sensor
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of the wake-up operation
+     */
+    esp_err_t (*wakeup)(void *sensor_ctx);
+
+    /**
+     * @brief Set sensor work mode
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of setting work mode
+     */
+    esp_err_t (*set_mode)(void *sensor_ctx, sensor_mode_t work_mode);
+
+    /**
+     * @brief Set sensor measurement range
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of setting measurement range
+     */
+    esp_err_t (*set_range)(void *sensor_ctx, sensor_range_t range);
+} humiture_impl_t;
 
 #ifdef __cplusplus
 extern "C"
@@ -36,14 +102,14 @@ extern "C"
 #endif
 
 /**
- * @brief Create a humiture/temperature/humidity sensor instance.
- * Same series' sensor or sensor with same address can only be created once.
+ * @brief Create a humiture/temperature sensor instance.
  *
- * @param bus i2c bus handle the sensor attached to
- * @param id id declared in humiture_id_t
+ * @param bus i2c/spi bus handle the sensor attached to
+ * @param sensor_name name of sensor
+ * @param addr addr of sensor
  * @return sensor_humiture_handle_t return humiture sensor handle if succeed, return NULL if create failed.
  */
-sensor_humiture_handle_t humiture_create(bus_handle_t bus, int id);
+sensor_humiture_handle_t humiture_create(bus_handle_t bus, const char *sensor_name, uint8_t addr);
 
 /**
  * @brief Delete and release the sensor resource.
@@ -113,7 +179,7 @@ esp_err_t humiture_wakeup(sensor_humiture_handle_t sensor);
 
 /**
  * @brief acquire a group of sensor data
- * 
+ *
  * @param sensor humiture sensor handle to operate
  * @param data_group acquired data
  * @return esp_err_t
@@ -124,7 +190,7 @@ esp_err_t humiture_acquire(sensor_humiture_handle_t sensor, sensor_data_group_t 
 
 /**
  * @brief control sensor mode with control commands and args
- * 
+ *
  * @param sensor humiture sensor handle to operate
  * @param cmd control commands detailed in sensor_command_t
  * @param args control commands args
@@ -135,9 +201,9 @@ esp_err_t humiture_acquire(sensor_humiture_handle_t sensor, sensor_data_group_t 
 esp_err_t humiture_control(sensor_humiture_handle_t sensor, sensor_command_t cmd, void *args);
 
 #ifdef __cplusplus
-extern "C"
 }
 #endif
 
+#endif
 
 #endif

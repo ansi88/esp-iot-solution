@@ -1,21 +1,13 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 #ifndef _IS31FL3218_H_
 #define _IS31FL3218_H_
 
 #include "i2c_bus.h"
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,7 +27,7 @@ extern "C" {
 
 /**
  * @brief IS31FL3218 mode
- * 
+ *
  */
 typedef enum {
     IS31FL3218_MODE_SHUTDOWN = 0, /**< Software shutdown mode */
@@ -45,7 +37,7 @@ typedef enum {
 
 /**
  * @brief Register of IS31FL3218
- * 
+ *
  */
 typedef enum {
     IS31FL3218_REG_SHUTDOWN = 0x00,                         /*0 First state or BR/EDR scan 1*/
@@ -74,7 +66,6 @@ typedef enum {
     IS31FL3218_REG_RESET,
     IS31FL3218_REG_MAX,
 } is31fl3218_reg_t;
-
 
 typedef void* is31fl3218_handle_t;
 
@@ -147,4 +138,3 @@ esp_err_t is31fl3218_write_pwm_regs(is31fl3218_handle_t fxled, uint8_t* duty, in
 #endif
 
 #endif
-

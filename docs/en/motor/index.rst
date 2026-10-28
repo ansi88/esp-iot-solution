@@ -5,4 +5,6 @@ Motor
 .. toctree::
     :maxdepth: 1
 
+    BLDC <bldc/index>
     Servo <servo>
+    FOC <foc/esp_simplefoc>

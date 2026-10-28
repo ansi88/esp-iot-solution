@@ -1,19 +1,13 @@
-// Copyright 2020-2021 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2022-2026 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef _IMU_HAL_H_
 #define _IMU_HAL_H_
+
+#ifdef CONFIG_SENSOR_INCLUDED_IMU
 
 #include "i2c_bus.h"
 #include "esp_err.h"
@@ -22,28 +16,105 @@
 typedef void *sensor_imu_handle_t; /*!< imu sensor handle*/
 
 /**
- * @brief imu sensor id, used for imu_create
- * 
+ * @brief Implementation Interface for IMU Sensors
+ *
  */
-typedef enum {
-    MPU6050_ID = 0x01, /*!< MPU6050 imu sensor id*/
-    LIS2DH12_ID, /*!< LIS2DH12 imu sensor id*/
-    IMU_MAX_ID, /*!< max imu sensor id*/
-} imu_id_t;
+typedef struct {
+    /**
+     * @brief Initialize the IMU sensor
+     *
+     * @param[out] sensor_ctx Pointer to receive the driver's per-instance context
+     * @param handle The bus handle
+     * @param addr The I2C address of the sensor
+     * @return esp_err_t Result of initialization
+     */
+    esp_err_t (*init)(void **sensor_ctx, bus_handle_t handle, uint8_t addr);
+
+    /**
+     * @brief Deinitialize the IMU sensor
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of deinitialization
+     */
+    esp_err_t (*deinit)(void *sensor_ctx);
+
+    /**
+     * @brief Test the IMU sensor
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of the test
+     */
+    esp_err_t (*test)(void *sensor_ctx);
+
+    /**
+     * @brief Acquire accelerometer data
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @param[out] acce_x Pointer to store the X-axis accelerometer data
+     * @param[out] acce_y Pointer to store the Y-axis accelerometer data
+     * @param[out] acce_z Pointer to store the Z-axis accelerometer data
+     * @return esp_err_t Result of acquiring data
+     */
+    esp_err_t (*acquire_acce)(void *sensor_ctx, float *acce_x, float *acce_y, float *acce_z);
+
+    /**
+     * @brief Acquire gyroscope data
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @param[out] gyro_x Pointer to store the X-axis gyroscope data
+     * @param[out] gyro_y Pointer to store the Y-axis gyroscope data
+     * @param[out] gyro_z Pointer to store the Z-axis gyroscope data
+     * @return esp_err_t Result of acquiring data
+     */
+    esp_err_t (*acquire_gyro)(void *sensor_ctx, float *gyro_x, float *gyro_y, float *gyro_z);
+
+    /**
+     * @brief Put the IMU sensor to sleep
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of the sleep operation
+     */
+    esp_err_t (*sleep)(void *sensor_ctx);
+
+    /**
+     * @brief Wake up the IMU sensor
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of the wake-up operation
+     */
+    esp_err_t (*wakeup)(void *sensor_ctx);
+
+    /**
+     * @brief Set sensor work mode
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of setting work mode
+     */
+    esp_err_t (*set_mode)(void *sensor_ctx, sensor_mode_t work_mode);
+
+    /**
+     * @brief Set sensor measurement range
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of setting measurement range
+     */
+    esp_err_t (*set_range)(void *sensor_ctx, sensor_range_t range);
+} imu_impl_t;
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
 /**
  * @brief Create a Inertial Measurement Unit sensor instance.
- * Same series' sensor or sensor with same address can only be created once.
  *
- * @param bus i2c bus handle the sensor attached to
- * @param imu_id id declared in imu_id_t
+ * @param bus i2c/spi bus handle the sensor attached to
+ * @param sensor_name name of sensor
+ * @param addr addr of sensor
  * @return sensor_imu_handle_t return imu sensor handle if succeed, NULL is failed.
  */
-sensor_imu_handle_t imu_create(bus_handle_t bus, int imu_id);
+sensor_imu_handle_t imu_create(bus_handle_t bus, const char *sensor_name, uint8_t addr);
 
 /**
  * @brief Delete and release the sensor resource.
@@ -66,25 +137,25 @@ esp_err_t imu_delete(sensor_imu_handle_t *sensor);
 esp_err_t imu_test(sensor_imu_handle_t sensor);
 
 /**
- * @brief Acquire imu sensor accelerometer result one time. 
- * 
- * @param sensor imu sensor handle to operate 
+ * @brief Acquire imu sensor accelerometer result one time.
+ *
+ * @param sensor imu sensor handle to operate
  * @param acce result data (unit:g)
- * @return esp_err_t 
+ * @return esp_err_t
  *     - ESP_OK Success
- *     - ESP_FAIL Fail 
+ *     - ESP_FAIL Fail
  *     - ESP_ERR_NOT_SUPPORTED Function not supported on this sensor
 */
 esp_err_t imu_acquire_acce(sensor_imu_handle_t sensor, axis3_t* acce);
 
 /**
  * @brief Acquire imu sensor gyroscope result one time.
- * 
- * @param sensor imu sensor handle to operate 
+ *
+ * @param sensor imu sensor handle to operate
  * @param gyro result data (unit:dps)
- * @return esp_err_t 
+ * @return esp_err_t
  *     - ESP_OK Success
- *     - ESP_FAIL Fail 
+ *     - ESP_FAIL Fail
  *     - ESP_ERR_NOT_SUPPORTED Function not supported on this sensor
 */
 esp_err_t imu_acquire_gyro(sensor_imu_handle_t sensor, axis3_t* gyro);
@@ -113,7 +184,7 @@ esp_err_t imu_wakeup(sensor_imu_handle_t sensor);
 
 /**
  * @brief acquire a group of sensor data
- * 
+ *
  * @param sensor imu sensor handle to operate
  * @param data_group acquired data
  * @return esp_err_t
@@ -124,7 +195,7 @@ esp_err_t imu_acquire(sensor_imu_handle_t sensor, sensor_data_group_t *data_grou
 
 /**
  * @brief control sensor mode with control commands and args
- * 
+ *
  * @param sensor imu sensor handle to operate
  * @param cmd control commands detailed in sensor_command_t
  * @param args control commands args
@@ -135,9 +206,9 @@ esp_err_t imu_acquire(sensor_imu_handle_t sensor, sensor_data_group_t *data_grou
 esp_err_t imu_control(sensor_imu_handle_t sensor, sensor_command_t cmd, void *args);
 
 #ifdef __cplusplus
-extern "C"
 }
 #endif
 
+#endif
 
 #endif

@@ -8,17 +8,17 @@ ESP-IoT-Solution  编程指南
 ESP-IoT-Solution 包含物联网系统开发中常用的外设驱动和代码框架，可作为 `ESP-IDF <https://github.com/espressif/esp-idf>`_ 的补充组件，方便用户实现更简单的开发。
 
 ==================  ==================  ==================
-|入门指南|_           |显示设备|_            |音频设备|_
+|入门指南|_           |显示设备|_          |USB主机&设备|_
 ------------------  ------------------  ------------------
-`入门指南`_           `显示设备`_            `音频设备`_
+`入门指南`_           `显示设备`_          `USB主机&设备`_
 ------------------  ------------------  ------------------
 |图形界面|_           |输入设备|_           |传感器集|_
 ------------------  ------------------  ------------------
 `图形界面`_           `输入设备`_           `传感器集`_
 ------------------  ------------------  ------------------
-|安全&加密|_          |贡献代码|_
+|音频设备|_           |安全&加密|_          |贡献代码|_
 ------------------  ------------------  ------------------
-`安全&加密`_          `贡献代码`_
+`音频设备`_           `安全&加密`_          `贡献代码`_
 ==================  ==================  ==================
 
 
@@ -37,17 +37,20 @@ ESP-IoT-Solution 包含物联网系统开发中常用的外设驱动和代码框
 .. |显示设备| image:: ../_static/display.png
 .. _显示设备: display/index.html
 
+.. |图形界面| image:: ../_static/gui.png
+.. _图形界面: display/lcd/gui_solution.html
+
+.. |USB主机&设备| image:: ../_static/usb.png
+.. _USB主机&设备: usb/index.html
+
 .. |输入设备| image:: ../_static/input_device.png
 .. _输入设备: input_device/index.html
-
-.. |图形界面| image:: ../_static/gui.png
-.. _图形界面: gui/index.html
 
 .. |音频设备| image:: ../_static/audio.png
 .. _音频设备: audio/index.html
 
-.. |HMI 方案| image:: ../_static/hmi_solution.png
-.. _HMI 方案: hmi_solution/index.html
+.. |电工&照明 方案| image:: ../_static/electrical_lighting_solution.png
+.. _电工&照明 方案: Electrical_Lighting_solution/index.html
 
 .. |安全&加密| image:: ../_static/security_solution.png
 .. _安全&加密: security_solution/index.html
@@ -61,13 +64,21 @@ ESP-IoT-Solution 包含物联网系统开发中常用的外设驱动和代码框
 
    快速入门 <gettingstarted>
    基础组件 <basic/index>
+   蓝牙 <bluetooth/index>
    显示设备 <display/index>
+   USB主机&设备 <usb/index>
    音频设备 <audio/index>
-   图形界面 <gui/index>
+   音视频编解码 <multimedia/index>
+   人工智能 <ai/index>
    输入设备 <input_device/index>
+   红外 <ir/index>
+   低功耗方案 <low_power_solution/index>
    传感器集 <sensors/index>
+   触摸传感器 <touch/index>
    存储方案 <storage/index>
    电机驱动 <motor/index>
    安全&加密 <security_solution/index>
+   电工&照明 <electrical_lighting_solution/index>
+   解决方案 <solution/index>
    其它资源 <others/index>
    贡献代码 <contribute/index>

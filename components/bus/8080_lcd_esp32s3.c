@@ -1,21 +1,14 @@
-// Copyright 2010-2021 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #include "sdkconfig.h"
 #if CONFIG_IDF_TARGET_ESP32S3
 
 #include <stdio.h>
+#include <inttypes.h>
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -25,6 +18,7 @@
 #include "esp32s3/rom/lldesc.h"
 #include "esp32s3/rom/gpio.h"
 #include "driver/gpio.h"
+#include "soc/gpio_periph.h"
 #include "soc/system_reg.h"
 #include "soc/lcd_cam_struct.h"
 #include "soc/lcd_cam_reg.h"
@@ -42,6 +36,11 @@ static const char *TAG = "ESP32S3_LCD";
     }
 
 #define LCD_CAM_DMA_NODE_BUFFER_MAX_SIZE  (4000)
+
+#if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0))
+#define ets_delay_us esp_rom_delay_us
+#define portTICK_RATE_MS portTICK_PERIOD_MS
+#endif
 
 typedef struct {
     uint32_t dma_buffer_size;
@@ -63,7 +62,6 @@ typedef struct {
     lcd_cam_obj_t *i2s_lcd_obj;
     SemaphoreHandle_t mutex;
 } i2s_lcd_driver_t;
-
 
 static void IRAM_ATTR dma_isr(void *arg)
 {
@@ -292,13 +290,12 @@ static esp_err_t lcd_dma_config(lcd_cam_obj_t *lcd_cam_obj, const i2s_lcd_config
     lcd_cam_obj->dma_node_cnt = (lcd_cam_obj->dma_buffer_size) / lcd_cam_obj->dma_node_buffer_size; // Number of DMA nodes
     lcd_cam_obj->dma_half_node_cnt = lcd_cam_obj->dma_node_cnt / 2;
 
-    ESP_LOGI(TAG, "lcd_buffer_size: %d, lcd_dma_size: %d, lcd_dma_node_cnt: %d", lcd_cam_obj->dma_buffer_size, lcd_cam_obj->dma_node_buffer_size, lcd_cam_obj->dma_node_cnt);
+    ESP_LOGI(TAG, "lcd_buffer_size: %"PRIu32", lcd_dma_size: %"PRIu32", lcd_dma_node_cnt: %"PRIu32"", lcd_cam_obj->dma_buffer_size, lcd_cam_obj->dma_node_buffer_size, lcd_cam_obj->dma_node_cnt);
 
     lcd_cam_obj->dma    = (lldesc_t *)heap_caps_malloc(lcd_cam_obj->dma_node_cnt * sizeof(lldesc_t), MALLOC_CAP_DMA);
     lcd_cam_obj->dma_buffer = (uint8_t *)heap_caps_malloc(lcd_cam_obj->dma_buffer_size * sizeof(uint8_t), MALLOC_CAP_DMA);
     return ESP_OK;
 }
-
 
 esp_err_t lcd_cam_deinit(i2s_lcd_driver_t *drv)
 {

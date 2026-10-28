@@ -1,16 +1,8 @@
-// Copyright 2020-2021 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -67,12 +59,11 @@ esp_err_t sensors_event_loop_delete(void)
     return ESP_OK;
 }
 
-
 esp_err_t sensors_event_handler_instance_register(esp_event_base_t event_base,
-        int32_t event_id,
-        esp_event_handler_t event_handler,
-        void *event_handler_arg,
-        esp_event_handler_instance_t *context)
+                                                  int32_t event_id,
+                                                  esp_event_handler_t event_handler,
+                                                  void *event_handler_arg,
+                                                  esp_event_handler_instance_t *context)
 {
 #ifdef CONFIG_SENSOR_EVENT_LOOP_AUTO
     if (h_sensors_loop == NULL) {
@@ -104,8 +95,8 @@ esp_err_t sensors_event_handler_instance_register(esp_event_base_t event_base,
 }
 
 esp_err_t sensors_event_handler_instance_unregister(esp_event_base_t event_base,
-        int32_t event_id,
-        esp_event_handler_instance_t context)
+                                                    int32_t event_id,
+                                                    esp_event_handler_instance_t context)
 {
     if (h_sensors_loop == NULL) {
         return ESP_ERR_INVALID_STATE;
@@ -136,7 +127,6 @@ esp_err_t sensors_event_post(esp_event_base_t event_base, int32_t event_id,
     return esp_event_post_to(h_sensors_loop, event_base, event_id,
                              event_data, event_data_size, ticks_to_wait);
 }
-
 
 #if CONFIG_ESP_EVENT_POST_FROM_ISR
 esp_err_t sensors_event_isr_post(esp_event_base_t event_base, int32_t event_id,

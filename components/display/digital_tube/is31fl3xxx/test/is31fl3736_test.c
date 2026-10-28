@@ -1,16 +1,8 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #include <stdio.h>
 #include "unity.h"
@@ -27,15 +19,15 @@
 #define I2C_MASTER_FREQ_HZ    400000   /*!< I2C master clock frequency */
 
 static const uint8_t image_e[12] = {
-    0x1f, 0x15, 0x15,0x0
+    0x1f, 0x15, 0x15, 0x0
 };
 
 static const uint8_t image_s[12] = {
-    0x17, 0x15, 0x1d,0x0
+    0x17, 0x15, 0x1d, 0x0
 };
 
 static const uint8_t image_p[12] = {
-    0x1f, 0x05, 0x07,0x0
+    0x1f, 0x05, 0x07, 0x0
 };
 
 static i2c_bus_handle_t i2c_bus = NULL;
@@ -78,39 +70,39 @@ esp_err_t is31fl3736_display_buf(i2c_port_t i2c_port, uint8_t x, uint8_t y, char
         return ESP_FAIL;
     }
     switch (*c) {
-        case 'e':
-            for (i = 0; i < 12; i++) {
-                if (image_e[i]) {
-                    if (i + y < 12) {
-                        buf[i + y] = image_e[i];
-                        buf[i + y] = (buf[i + y] << x) & 0xff;
-                    }
+    case 'e':
+        for (i = 0; i < 12; i++) {
+            if (image_e[i]) {
+                if (i + y < 12) {
+                    buf[i + y] = image_e[i];
+                    buf[i + y] = (buf[i + y] << x) & 0xff;
                 }
             }
-            break;
-        case 's':
-            for (i = 0; i < 12; i++) {
-                if (image_s[i]) {
-                    if (i + y < 12) {
-                        buf[i + y] = image_s[i];
-                        buf[i + y] = (buf[i + y] << x) & 0xff;
-                    }
+        }
+        break;
+    case 's':
+        for (i = 0; i < 12; i++) {
+            if (image_s[i]) {
+                if (i + y < 12) {
+                    buf[i + y] = image_s[i];
+                    buf[i + y] = (buf[i + y] << x) & 0xff;
                 }
             }
-            break;
-        case 'p':
-            for (i = 0; i < 12; i++) {
-                if (image_p[i]) {
-                    if (i + y < 12) {
-                        buf[i + y] = image_p[i];
-                        buf[i + y] = (buf[i + y] << x) & 0xff;
-                    }
+        }
+        break;
+    case 'p':
+        for (i = 0; i < 12; i++) {
+            if (image_p[i]) {
+                if (i + y < 12) {
+                    buf[i + y] = image_p[i];
+                    buf[i + y] = (buf[i + y] << x) & 0xff;
                 }
             }
-            break;
-        default:
-            return ESP_FAIL;
-            break;
+        }
+        break;
+    default:
+        return ESP_FAIL;
+        break;
     }
     return ESP_OK;
 }
@@ -178,4 +170,3 @@ TEST_CASE("I2C led is31f13736 test", "[is31f13736][iot][fxled]")
 {
     is31f13736_test();
 }
-

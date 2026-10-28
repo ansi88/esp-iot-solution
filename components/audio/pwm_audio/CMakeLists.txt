@@ -1,5 +1,6 @@
+idf_component_register(SRCS "pwm_audio.c"
+                       INCLUDE_DIRS "include"
+                       REQUIRES driver)
 
-set(pwm_audio_srcs "pwm_audio.c")
-
-idf_component_register(SRCS "${pwm_audio_srcs}"
-                       INCLUDE_DIRS "include")
+include(package_manager)
+cu_pkg_define_version(${CMAKE_CURRENT_LIST_DIR})

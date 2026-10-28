@@ -1,16 +1,8 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef _BH1750_H_
 #define _BH1750_H_
@@ -99,7 +91,7 @@ esp_err_t bh1750_reset_data_register(bh1750_handle_t sensor);
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
  * @note
- *        You should call this funtion to set measurement mode before call bh1750_get_data() to acquire data.
+ *        You should call this function to set measurement mode before call bh1750_get_data() to acquire data.
  *        If you set to onetime mode, you just can get one measurement data.
  *        If you set to continuously mode, you can call bh1750_get_data() to acquire data repeatedly.
  */
@@ -148,7 +140,7 @@ esp_err_t bh1750_change_measure_time(bh1750_handle_t sensor, uint8_t measure_tim
 #ifdef CONFIG_SENSOR_LIGHT_INCLUDED_BH1750
 /**
  * @brief initialize bh1750 with default configurations
- * 
+ *
  * @param i2c_bus i2c bus handle the sensor will attached to
  * @return
  *     - ESP_OK Success
@@ -158,7 +150,7 @@ esp_err_t light_sensor_bh1750_init(i2c_bus_handle_t handle);
 
 /**
  * @brief de-initialize bh1750
- * 
+ *
  * @return
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
@@ -167,7 +159,7 @@ esp_err_t light_sensor_bh1750_deinit(void);
 
 /**
  * @brief test if bh1750 is active
- * 
+ *
  * @return
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
@@ -176,7 +168,7 @@ esp_err_t light_sensor_bh1750_test(void);
 
 /**
  * @brief acquire bh1750 light illuminance result one time.
- * 
+ *
  * @param l result data (unit:lux)
  * @return
  *     - ESP_OK Success

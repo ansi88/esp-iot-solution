@@ -1,19 +1,13 @@
-// Copyright 2020-2021 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2022-2026 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef _LIGHT_SENSOR_HAL_H_
 #define _LIGHT_SENSOR_HAL_H_
+
+#ifdef CONFIG_SENSOR_INCLUDED_LIGHT
 
 #include "i2c_bus.h"
 #include "esp_err.h"
@@ -22,15 +16,100 @@
 typedef void *sensor_light_handle_t; /*!< light sensor handle*/
 
 /**
- * @brief light sensor id, used for light_sensor_create
- * 
+ * @brief Implementation Interface for Light Sensors
+ *
  */
-typedef enum {
-    BH1750_ID = 0x01, /*!< BH1750 light sensor id*/
-    VEML6040_ID, /*!< VEML6040 light sensor id*/
-    VEML6075_ID, /*!< VEML6075 light sensor id*/
-    LIGHT_MAX_ID, /*!< max light sensor id*/
-} light_sensor_id_t;
+typedef struct {
+    /**
+     * @brief Initialize the light sensor
+     *
+     * @param[out] sensor_ctx Pointer to receive the driver's per-instance context
+     * @param handle The bus handle
+     * @param addr The I2C address of the sensor
+     * @return esp_err_t Result of initialization
+     */
+    esp_err_t (*init)(void **sensor_ctx, bus_handle_t handle, uint8_t addr);
+
+    /**
+     * @brief Deinitialize the light sensor
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of deinitialization
+     */
+    esp_err_t (*deinit)(void *sensor_ctx);
+
+    /**
+     * @brief Test the light sensor
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of the test
+     */
+    esp_err_t (*test)(void *sensor_ctx);
+
+    /**
+     * @brief Acquire ambient light data
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @param[out] l Pointer to store the ambient light intensity
+     * @return esp_err_t Result of acquiring data
+     */
+    esp_err_t (*acquire_light)(void *sensor_ctx, float *l);
+
+    /**
+     * @brief Acquire RGBW (Red, Green, Blue, White) light data
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @param[out] r Pointer to store the red light intensity
+     * @param[out] g Pointer to store the green light intensity
+     * @param[out] b Pointer to store the blue light intensity
+     * @param[out] w Pointer to store the white light intensity
+     * @return esp_err_t Result of acquiring data
+     */
+    esp_err_t (*acquire_rgbw)(void *sensor_ctx, float *r, float *g, float *b, float *w);
+
+    /**
+     * @brief Acquire UV (Ultraviolet) light data
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @param[out] uv Pointer to store the total UV intensity
+     * @param[out] uva Pointer to store the UVA light intensity
+     * @param[out] uvb Pointer to store the UVB light intensity
+     * @return esp_err_t Result of acquiring data
+     */
+    esp_err_t (*acquire_uv)(void *sensor_ctx, float *uv, float *uva, float *uvb);
+
+    /**
+     * @brief Put the light sensor to sleep
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of the sleep operation
+     */
+    esp_err_t (*sleep)(void *sensor_ctx);
+
+    /**
+     * @brief Wake up the light sensor
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of the wake-up operation
+     */
+    esp_err_t (*wakeup)(void *sensor_ctx);
+
+    /**
+     * @brief Set sensor work mode
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of setting work mode
+     */
+    esp_err_t (*set_mode)(void *sensor_ctx, sensor_mode_t work_mode);
+
+    /**
+     * @brief Set sensor measurement range
+     *
+     * @param sensor_ctx The per-instance context returned by init
+     * @return esp_err_t Result of setting measurement range
+     */
+    esp_err_t (*set_range)(void *sensor_ctx, sensor_range_t range);
+} light_impl_t;
 
 #ifdef __cplusplus
 extern "C"
@@ -39,13 +118,13 @@ extern "C"
 
 /**
  * @brief Create a light sensor instance.
- * same series' sensor or sensor with same address can only be created once.
  *
- * @param bus i2c bus handle the sensor attached to
- * @param id id declared in light_sensor_id_t
- * @return sensor_light_handle_t return light sensor handle if succeed, return NULL if failed.
+ * @param bus i2c/spi bus handle the sensor attached to
+ * @param sensor_name name of sensor
+ * @param addr addr of sensor
+ * @return sensor_light_handle_t return humiture sensor handle if succeed, return NULL if create failed.
  */
-sensor_light_handle_t light_sensor_create(bus_handle_t bus, int id);
+sensor_light_handle_t light_sensor_create(bus_handle_t bus, const char *sensor_name, uint8_t addr);
 
 /**
  * @brief Delete and release the sensor resource.
@@ -129,7 +208,7 @@ esp_err_t light_sensor_wakeup(sensor_light_handle_t sensor);
 
 /**
  * @brief acquire a group of sensor data
- * 
+ *
  * @param sensor light sensor handle to operate
  * @param data_group acquired data
  * @return esp_err_t
@@ -140,7 +219,7 @@ esp_err_t light_sensor_acquire(sensor_light_handle_t sensor, sensor_data_group_t
 
 /**
  * @brief control sensor mode with control commands and args
- * 
+ *
  * @param sensor light sensor handle to operate
  * @param cmd control commands detailed in sensor_command_t
  * @param args control commands args
@@ -151,9 +230,9 @@ esp_err_t light_sensor_acquire(sensor_light_handle_t sensor, sensor_data_group_t
 esp_err_t light_sensor_control(sensor_light_handle_t sensor, sensor_command_t cmd, void *args);
 
 #ifdef __cplusplus
-extern "C"
 }
 #endif
 
+#endif
 
 #endif

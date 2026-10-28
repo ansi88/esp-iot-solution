@@ -1,16 +1,8 @@
-// Copyright 2015-2020 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #include <stdio.h>
 #include "unity.h"
@@ -27,15 +19,15 @@ TEST_CASE("dac audio sine wave test", "[audio][iot]")
     int8_t *data_buffer;
     const uint32_t size = 240;  /*< f = 48000 / 240 = 200Hz*/
 
-    data_buffer = malloc(size*2);
+    data_buffer = malloc(size * 2);
     TEST_ASSERT_NOT_NULL(data_buffer);
 
     /**
      * Generating two channel waveforms with phase difference
      */
     for (size_t i = 0; i < size; i++) {
-        data_buffer[i*2] = 127.8f * sinf(PI_2 * (float)i / (float)size);
-        data_buffer[i*2+1] = 127.8f * cosf(PI_2 * (float)i / (float)size);
+        data_buffer[i * 2] = 127.8f * sinf(PI_2 * (float)i / (float)size);
+        data_buffer[i * 2 + 1] = 127.8f * cosf(PI_2 * (float)i / (float)size);
     }
 
     dac_audio_config_t dac_cfg;
@@ -80,7 +72,7 @@ static void play_audio(const uint8_t *data, size_t wave_size, uint32_t rate, uin
     uint32_t index = 0;
     size_t cnt;
     uint32_t block_w = 2048;
-    ESP_LOGI(TAG, "paramter: samplerate:%d, bits:%d, channel:%d", rate, bits, ch);
+    ESP_LOGI(TAG, "parameter: samplerate:%d, bits:%d, channel:%d", rate, bits, ch);
     dac_audio_set_param(rate, bits, ch);
     dac_audio_start();
 
@@ -133,6 +125,4 @@ TEST_CASE("dac audio play music test", "[audio][iot]")
 {
     play_with_param(0, 1);
 
-
 }
-
